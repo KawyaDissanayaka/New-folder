@@ -95,11 +95,39 @@ export default function Register() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep2()) return;
     setIsLoading(true);
-    setTimeout(() => navigate('/register-success'), 800);
+    try {
+      const res = await fetch('http://localhost:3001/api/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: formData.companyName,
+          companyEmail: formData.companyEmail,
+          phone: formData.phone,
+          website: formData.website,
+          companyType: formData.companyType,
+          country: formData.country,
+          city: formData.city,
+          address: formData.address,
+          employeeCount: formData.employeeCount,
+          about: formData.about,
+          adminName: formData.adminName,
+          adminEmail: formData.adminEmail,
+          adminPhone: formData.adminPhone,
+          industry: formData.companyType,
+          // password intentionally excluded
+        }),
+      });
+      if (!res.ok) throw new Error('Server error');
+      navigate('/register-success');
+    } catch {
+      alert('⚠️ Could not connect to server. Please make sure the backend is running.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 

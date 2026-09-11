@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Search, CheckCircle2, XCircle, Filter, Download, ArrowLeft, Eye, Edit3, Trash2, ShieldCheck, Clock, UserCheck, AlertTriangle, Key, LogOut } from 'lucide-react';
 import InputField from '@/components/InputField';
 import Button from '@/components/Button';
+
+const API = 'http://localhost:3001';
 
 export default function OrganizationManagement() {
   const [activeTab, setActiveTab] = useState<'tech' | 'finance' | 'edu' | 'healthcare' | 'manufacturing' | 'other'>('tech');
@@ -10,6 +12,61 @@ export default function OrganizationManagement() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingOrg, setDeletingOrg] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [requestsList, setRequestsList] = useState<any[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+
+  // Fetch registrations from backend
+  const fetchRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const res = await fetch(`${API}/api/registrations?status=pending`);
+      const data = await res.json();
+      setRequestsList(data);
+    } catch {
+      console.warn('Backend not reachable — using mock data');
+      setRequestsList([
+        { id: 101, companyName: 'Acme Global Systems Ltd', adminName: 'Arjuna Lakmal', email: 'arjuna.l@acmeglobal.com', date: '2023-11-20', industry: 'Technology', status: 'pending' },
+        { id: 102, companyName: 'Nexus Telecommunications Ltd', adminName: 'Nimali Jayasinghe', email: 'nimali@nexustelecom.com', date: '2023-11-20', industry: 'Telecom', status: 'pending' },
+        { id: 103, companyName: 'Lanka Retail Holdings', adminName: 'Kusal Mendis', email: 'kusal@lankaretail.lk', date: '2023-11-19', industry: 'E-commerce', status: 'pending' },
+      ]);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const handleApprove = async (id: number, companyName: string) => {
+    try {
+      await fetch(`${API}/api/registrations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' }),
+      });
+      setRequestsList((prev) => prev.filter((r) => r.id !== id));
+      alert(`✅ Approved: ${companyName}`);
+    } catch {
+      alert(`✅ Approved: ${companyName} (offline mode)`);
+      setRequestsList((prev) => prev.filter((r) => r.id !== id));
+    }
+  };
+
+  const handleReject = async (id: number, companyName: string) => {
+    try {
+      await fetch(`${API}/api/registrations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' }),
+      });
+      setRequestsList((prev) => prev.filter((r) => r.id !== id));
+      alert(`❌ Rejected: ${companyName}`);
+    } catch {
+      alert(`❌ Rejected: ${companyName} (offline mode)`);
+      setRequestsList((prev) => prev.filter((r) => r.id !== id));
+    }
+  };
 
   // Mock Active Companies grouped by Industry
   const companiesByIndustry = {
@@ -37,11 +94,8 @@ export default function OrganizationManagement() {
     other: [],
   };
 
-  const requestsList = [
-    { id: 101, companyName: 'Acme Global Systems Ltd', adminName: 'Arjuna Lakmal', email: 'arjuna.l@acmeglobal.com', date: '2023-11-20', industry: 'Technology' },
-    { id: 102, companyName: 'Nexus Telecommunications Ltd', adminName: 'Nimali Jayasinghe', email: 'nimali@nexustelecom.com', date: '2023-11-20', industry: 'Telecom' },
-    { id: 103, companyName: 'Lanka Retail Holdings', adminName: 'Kusal Mendis', email: 'kusal@lankaretail.lk', date: '2023-11-19', industry: 'E-commerce' },
-  ];
+  const requestsList_unused = null; // replaced by state above
+
 
   const currentCompanies = companiesByIndustry[activeTab] || [];
 
@@ -143,11 +197,108 @@ export default function OrganizationManagement() {
             <Building2 className="w-5 h-5 text-purple-700" />
             <span className="text-xs font-black text-purple-900">Company Registration Requests</span>
             <span className="w-6 h-6 rounded-full bg-purple-700 text-white font-black text-xs flex items-center justify-center">
-              12
+              {requestsList.length}
             </span>
           </div>
 
+          {/* ===== REQUESTS VIEW ===== */}
+          {viewMode === 'requests' && (
+            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-purple-100">
+                    <Clock className="w-4 h-4 text-purple-700" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900">Pending Registration Requests</h3>
+                    <p className="text-[10px] text-slate-400 font-medium">Review and approve or reject new company registrations</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewMode('active')}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-purple-50 text-purple-900 font-bold uppercase tracking-wider">
+                      <th className="py-3 px-4 rounded-l-xl">Company</th>
+                      <th className="py-3 px-4">Admin Contact</th>
+                      <th className="py-3 px-4">Industry</th>
+                      <th className="py-3 px-4">Requested Date</th>
+                      <th className="py-3 px-4 text-center rounded-r-xl">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {requestsList.map((req) => (
+                      <tr key={req.id} className="hover:bg-slate-50">
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0">
+                              {req.companyName.charAt(0)}
+                            </div>
+                            <div>
+                              <span className="block font-black text-slate-900">{req.companyName}</span>
+                              <span className="text-[10px] font-mono text-slate-400">{req.email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="block font-semibold text-slate-800">{req.adminName}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{req.email}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-bold text-[10px]">
+                            {req.industry}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 font-mono text-slate-500">{req.date}</td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => alert(`✅ Approved: ${req.companyName}`)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] shadow-sm transition-all"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => alert(`❌ Rejected: ${req.companyName}`)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-[10px] shadow-sm transition-all"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              Reject
+                            </button>
+                            <button
+                              onClick={() => handleOpenDetail({ ...req, name: req.companyName, status: 'PENDING', lastLogin: 'N/A', website: '-', location: '-', phone: '-' })}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {requestsList.length === 0 && (
+                <div className="text-center py-12 space-y-3">
+                  <UserCheck className="w-10 h-10 text-slate-300 mx-auto" />
+                  <span className="text-xs font-bold text-slate-400 block">No Pending Requests</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Active Company Table Card */}
+          {viewMode === 'active' && (
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
             
             <div className="flex items-center justify-between">
@@ -268,6 +419,7 @@ export default function OrganizationManagement() {
             </div>
 
           </div>
+          )}
 
           {/* Bottom Stats Banner (Matching Images 1-6 Bottom) */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
