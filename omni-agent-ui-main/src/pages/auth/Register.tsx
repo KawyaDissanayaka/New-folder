@@ -1,6 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Bot, Mail, Building2, Globe, User, Layers, Cpu, ArrowRight, Phone, Lock, MapPin, Users, FileText, ChevronRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Bot, Mail, Building2, Globe, User, Layers, Cpu, ArrowRight, Phone, Lock, MapPin, FileText, ChevronRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+
+// ⭐ Defined OUTSIDE Register — prevents remounting on every keystroke
+// ⭐ inputClass does NOT take errors as param to avoid recreating on every render
+function inputClass(hasError: boolean) {
+  // font-size: 16px via text-base prevents iOS/Android zoom on focus
+  return `w-full pl-10 pr-4 py-2.5 rounded-xl border text-base font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 transition-all placeholder:text-slate-300 ${
+    hasError
+      ? 'border-red-400 focus:ring-red-500/20'
+      : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
+  }`;
+}
+
+function Field({
+  label, icon, required = false, error, children,
+}: {
+  label: string; icon: React.ReactNode; required?: boolean; error?: string; children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">{icon}</span>
+        {children}
+      </div>
+      {error && <p className="text-[10px] text-red-500 font-semibold mt-1">{error}</p>}
+    </div>
+  );
+}
 
 export default function Register() {
   const navigate = useNavigate();
@@ -72,29 +102,6 @@ export default function Register() {
     setTimeout(() => navigate('/register-success'), 800);
   };
 
-  const inputClass = (key: string) =>
-    `w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 transition-all placeholder:text-slate-300 ${
-      errors[key]
-        ? 'border-red-400 focus:ring-red-500/20'
-        : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
-    }`;
-
-  const Field = ({
-    label, icon, required = false, error, children,
-  }: {
-    label: string; icon: React.ReactNode; required?: boolean; error?: string; children: React.ReactNode;
-  }) => (
-    <div>
-      <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">{icon}</span>
-        {children}
-      </div>
-      {error && <p className="text-[10px] text-red-500 font-semibold mt-1">{error}</p>}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
@@ -194,7 +201,7 @@ export default function Register() {
                     placeholder="Acme Tech Solutions"
                     value={formData.companyName}
                     onChange={(e) => set('companyName', e.target.value)}
-                    className={inputClass('companyName')}
+                    className={inputClass(!!errors.companyName)}
                   />
                 </Field>
                 <Field label="Company Email" icon={<Mail className="w-4 h-4 text-slate-400" />} required error={errors.companyEmail}>
@@ -203,7 +210,7 @@ export default function Register() {
                     placeholder="company@domain.com"
                     value={formData.companyEmail}
                     onChange={(e) => set('companyEmail', e.target.value)}
-                    className={inputClass('companyEmail')}
+                    className={inputClass(!!errors.companyEmail)}
                   />
                 </Field>
               </div>
@@ -216,7 +223,7 @@ export default function Register() {
                     placeholder="+94 11 234 5678"
                     value={formData.phone}
                     onChange={(e) => set('phone', e.target.value)}
-                    className={inputClass('phone')}
+                    className={inputClass(!!errors.phone)}
                   />
                 </Field>
                 <Field label="Company Website" icon={<Globe className="w-4 h-4 text-slate-400" />}>
@@ -225,7 +232,7 @@ export default function Register() {
                     placeholder="https://acme.com"
                     value={formData.website}
                     onChange={(e) => set('website', e.target.value)}
-                    className={inputClass('website')}
+                    className={inputClass(false)}
                   />
                 </Field>
               </div>
@@ -239,7 +246,7 @@ export default function Register() {
                   <select
                     value={formData.companyType}
                     onChange={(e) => set('companyType', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
                   >
                     <option value="Technology">Technology</option>
                     <option value="Telecommunication">Telecommunication</option>
@@ -260,7 +267,7 @@ export default function Register() {
                   <select
                     value={formData.employeeCount}
                     onChange={(e) => set('employeeCount', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
                   >
                     <option value="">Select range</option>
                     <option value="1-10">1 – 10</option>
@@ -282,7 +289,7 @@ export default function Register() {
                   <select
                     value={formData.country}
                     onChange={(e) => set('country', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
                   >
                     <option>Sri Lanka</option>
                     <option>India</option>
@@ -301,7 +308,7 @@ export default function Register() {
                     placeholder="Colombo"
                     value={formData.city}
                     onChange={(e) => set('city', e.target.value)}
-                    className={inputClass('city')}
+                    className={inputClass(false)}
                   />
                 </Field>
               </div>
@@ -313,7 +320,7 @@ export default function Register() {
                   placeholder="No. 10, Main Street, Colombo 03"
                   value={formData.address}
                   onChange={(e) => set('address', e.target.value)}
-                  className={inputClass('address')}
+                  className={inputClass(false)}
                 />
               </Field>
 
@@ -329,7 +336,7 @@ export default function Register() {
                     placeholder="Brief description of your company and what you do..."
                     value={formData.about}
                     onChange={(e) => set('about', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all placeholder:text-slate-300 resize-none"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all placeholder:text-slate-300 resize-none"
                   />
                 </div>
                 <span className="text-[10px] text-slate-400 block text-right mt-1">{formData.about.length} / 300</span>
@@ -377,7 +384,7 @@ export default function Register() {
                     placeholder="John Doe"
                     value={formData.adminName}
                     onChange={(e) => set('adminName', e.target.value)}
-                    className={inputClass('adminName')}
+                    className={inputClass(!!errors.adminName)}
                   />
                 </Field>
                 <Field label="Admin Email" icon={<Mail className="w-4 h-4 text-slate-400" />} required error={errors.adminEmail}>
@@ -386,7 +393,7 @@ export default function Register() {
                     placeholder="admin@acme.com"
                     value={formData.adminEmail}
                     onChange={(e) => set('adminEmail', e.target.value)}
-                    className={inputClass('adminEmail')}
+                    className={inputClass(!!errors.adminEmail)}
                   />
                 </Field>
               </div>
@@ -397,7 +404,7 @@ export default function Register() {
                   placeholder="+94 77 123 4567"
                   value={formData.adminPhone}
                   onChange={(e) => set('adminPhone', e.target.value)}
-                  className={inputClass('adminPhone')}
+                  className={inputClass(false)}
                 />
               </Field>
 
@@ -413,7 +420,7 @@ export default function Register() {
                       placeholder="Min. 8 characters"
                       value={formData.password}
                       onChange={(e) => set('password', e.target.value)}
-                      className={inputClass('password') + ' pr-10'}
+                      className={inputClass(!!errors.password) + ' pr-10'}
                     />
                     <button
                       type="button"
@@ -448,7 +455,7 @@ export default function Register() {
                       placeholder="Re-enter password"
                       value={formData.confirmPassword}
                       onChange={(e) => set('confirmPassword', e.target.value)}
-                      className={inputClass('confirmPassword') + ' pr-10'}
+                      className={inputClass(!!errors.confirmPassword) + ' pr-10'}
                     />
                     <button
                       type="button"
