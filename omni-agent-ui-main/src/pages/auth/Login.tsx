@@ -17,7 +17,7 @@ export default function Login() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { email?: string; password?: string } = {};
 
@@ -37,10 +37,36 @@ export default function Login() {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      login({ name: 'Company Admin', role: 'company' }, 'mock-company-jwt-token');
-      navigate('/dashboard');
-    }, 600);
+    try {
+      let res;
+      try {
+        res = await fetch('http://localhost:3001/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email, password: formData.password }),
+        });
+      } catch {
+        res = await fetch('http://127.0.0.1:3001/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email, password: formData.password }),
+        });
+      }
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setErrors({ email: data.error || 'Invalid credentials or registration pending approval' });
+        return;
+      }
+
+      login(data.user, data.token);
+      navigate(data.user.role === 'superadmin' ? '/admin/dashboard' : '/dashboard');
+    } catch {
+      setErrors({ email: 'Backend server unreachable. Ensure server is running.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

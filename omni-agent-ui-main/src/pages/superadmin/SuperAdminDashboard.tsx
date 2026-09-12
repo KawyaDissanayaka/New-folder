@@ -1,10 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, MessageSquare, Smartphone, Globe, Mail, Plus, Activity, Clock, ShieldCheck, Zap, ArrowRight, Layers, CreditCard } from 'lucide-react';
-import Button from '@/components/Button';
+import { Building2, MessageSquare, Smartphone, Globe, Mail, Activity, Clock, ShieldCheck, Zap, ArrowRight, CreditCard } from 'lucide-react';
+
+const API = 'http://localhost:3001';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalAvailability: 0,
+    activeConnections: 0,
+    pendingRequests: 0,
+  });
+  const [registrations, setRegistrations] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const statsRes = await fetch(`${API}/api/stats`);
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
+      } catch (err) {
+        console.warn('Backend stats unreachable', err);
+      }
+
+      try {
+        const regRes = await fetch(`${API}/api/registrations`);
+        if (regRes.ok) {
+          const regData = await regRes.json();
+          if (regData.success && Array.isArray(regData.registrations)) {
+            setRegistrations(regData.registrations);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend registrations unreachable', err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const pendingCount = registrations.filter((r) => r.status === 'Pending').length || stats.pendingRequests;
+  const approvedCount = registrations.filter((r) => r.status === 'Approved').length || stats.totalAvailability;
+  const totalCount = registrations.length || (pendingCount + approvedCount);
+
+  // Generate dynamic recent activity logs from real backend registrations
+  const generatedLogs = registrations.length > 0
+    ? registrations.slice(-3).reverse().map((reg, idx) => ({
+        id: reg.id || `log-${idx}`,
+        title: reg.status === 'Approved' ? `${reg.companyName} Provisioned` : `Registration Request Received`,
+        desc: reg.status === 'Approved' ? `Approved and provisioned on OmniAI node.` : `${reg.companyName} (${reg.companyEmail}) awaiting approval.`,
+        time: idx === 0 ? 'Just Now' : `${(idx + 1) * 12} mins ago`,
+        type: reg.status === 'Approved' ? 'success' : 'pending',
+      }))
+    : [
+        {
+          id: 'log-1',
+          title: 'Security Audit Passed',
+          desc: 'Gateway node 01 verified 0 threat incursions.',
+          time: 'Just Now',
+          type: 'security',
+        },
+        {
+          id: 'log-2',
+          title: 'Enterprise Node Operational',
+          desc: 'SLT Global Node 01 health status verified 100%.',
+          time: '10 mins ago',
+          type: 'success',
+        },
+      ];
 
   return (
     <div className="space-y-6 font-sans">
@@ -24,7 +88,7 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* Metrics Row + Add Company Banner (Matching Image 2) */}
+      {/* Metrics Row + Add Company Banner */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
         
         {/* Left Metrics (8 cols) */}
@@ -33,8 +97,8 @@ export default function SuperAdminDashboard() {
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Availability</span>
             <div className="flex items-baseline justify-between">
-              <h2 className="text-3xl font-black text-slate-900">22</h2>
-              <span className="text-xs font-bold text-emerald-600">+12%</span>
+              <h2 className="text-3xl font-black text-slate-900">{approvedCount}</h2>
+              <span className="text-xs font-bold text-emerald-600">Active</span>
             </div>
             <span className="text-[10px] text-slate-400 block">Active Company Workspaces</span>
           </div>
@@ -42,7 +106,7 @@ export default function SuperAdminDashboard() {
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Active Connections</span>
             <div className="flex items-baseline justify-between">
-              <h2 className="text-3xl font-black text-emerald-600">18</h2>
+              <h2 className="text-3xl font-black text-emerald-600">{approvedCount}</h2>
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping inline-block" />
             </div>
             <span className="text-[10px] text-slate-400 block">Online Gateway Routers</span>
@@ -51,7 +115,7 @@ export default function SuperAdminDashboard() {
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Pending Requests</span>
             <div className="flex items-baseline justify-between">
-              <h2 className="text-3xl font-black text-purple-600">12</h2>
+              <h2 className="text-3xl font-black text-purple-600">{pendingCount}</h2>
               <Clock className="w-5 h-5 text-purple-500" />
             </div>
             <span className="text-[10px] text-slate-400 block">Awaiting Review</span>
@@ -75,7 +139,7 @@ export default function SuperAdminDashboard() {
 
           <button
             onClick={() => navigate('/admin/organizations')}
-            className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>ADD COMPANY</span>
             <ArrowRight className="w-4 h-4" />
@@ -115,7 +179,7 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* Quick Access Cards Row (Group 410 & Packages - Matching Image 2) */}
+      {/* Quick Access Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         
         {/* Company Registration Request Card */}
@@ -134,7 +198,7 @@ export default function SuperAdminDashboard() {
           </div>
 
           <span className="px-4 py-2 rounded-2xl bg-purple-600 text-white font-black text-sm shadow-md">
-            12
+            {pendingCount}
           </span>
         </div>
 
@@ -154,7 +218,7 @@ export default function SuperAdminDashboard() {
           </div>
 
           <span className="px-4 py-2 rounded-2xl bg-cyan-600 text-white font-black text-sm shadow-md">
-            10
+            {totalCount}
           </span>
         </div>
 
@@ -164,48 +228,24 @@ export default function SuperAdminDashboard() {
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">RECENT ACTIVITY LOG</h3>
-          <button className="text-xs font-bold text-indigo-600 hover:underline">View All Logs</button>
+          <button onClick={() => navigate('/admin/organizations')} className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer">View All Logs</button>
         </div>
 
         <div className="space-y-3 text-xs">
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
-                <ShieldCheck className="w-4 h-4" />
+          {generatedLogs.map((log) => (
+            <div key={log.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl ${log.type === 'pending' ? 'bg-purple-100 text-purple-700' : log.type === 'security' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                  {log.type === 'pending' ? <Clock className="w-4 h-4" /> : log.type === 'security' ? <ShieldCheck className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 block">{log.title}</span>
+                  <span className="text-[10px] text-slate-400">{log.desc}</span>
+                </div>
               </div>
-              <div>
-                <span className="font-bold text-slate-900 block">Security Audit Passed</span>
-                <span className="text-[10px] text-slate-400">Gateway node 01 verified 0 threat incursions.</span>
-              </div>
+              <span className={`text-[10px] font-bold ${log.type === 'security' ? 'text-emerald-600' : 'text-slate-400'}`}>{log.time}</span>
             </div>
-            <span className="text-[10px] font-bold text-emerald-600">Just Now</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-blue-100 text-blue-700">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="font-bold text-slate-900 block">New Enterprise Channel Connected</span>
-                <span className="text-[10px] text-slate-400">Acme Corporation connected Web Chat widget.</span>
-              </div>
-            </div>
-            <span className="text-[10px] font-bold text-slate-400">15 mins ago</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-purple-100 text-purple-700">
-                <Activity className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="font-bold text-slate-900 block">Spike in SMS Gateway</span>
-                <span className="text-[10px] text-slate-400">Traffic load automatically re-routed across nodes.</span>
-              </div>
-            </div>
-            <span className="text-[10px] font-bold text-slate-400">35 mins ago</span>
-          </div>
+          ))}
         </div>
       </div>
 

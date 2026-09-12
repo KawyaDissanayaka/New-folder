@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Users, UserPlus, ShieldCheck, Search, Check, Smartphone, MessageSquare, Globe, Mail, Building2, Download, Eye, Edit2, Trash2, Shield, Filter, ChevronLeft, ChevronRight, X, AlertTriangle, RefreshCw, Lock, Clock, MapPin, Laptop } from 'lucide-react';
 import InputField from '@/components/InputField';
 import Button from '@/components/Button';
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
 
 export default function UserManagement() {
   const [activeTab, setActiveTab] = useState<'whatsapp' | 'messenger' | 'sms' | 'email' | 'web'>('whatsapp');
@@ -9,6 +10,16 @@ export default function UserManagement() {
   const [userToDelete, setUserToDelete] = useState<any | null>(null);
   const [selectedUserView, setSelectedUserView] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Toasts State
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Form State
   const [fullName, setFullName] = useState('Jane A. Doe');
@@ -108,15 +119,15 @@ export default function UserManagement() {
               </button>
 
               <button
-                onClick={() => alert('Password reset email sent to user.')}
-                className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs"
+                onClick={() => addToast('Password reset email sent to user.', 'info')}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs cursor-pointer"
               >
                 Reset Access
               </button>
 
               <button
-                onClick={() => alert('User account deactivated.')}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md"
+                onClick={() => addToast('User account deactivated.', 'info')}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md cursor-pointer"
               >
                 Deactivate User
               </button>
@@ -328,16 +339,16 @@ export default function UserManagement() {
                 <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() => alert('Active user session terminated.')}
-                    className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs shadow-md"
+                    onClick={() => addToast('Active user session terminated.', 'info')}
+                    className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs shadow-md cursor-pointer"
                   >
                     Session Terminate This User
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => alert('User Changes Saved Successfully!')}
-                    className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md"
+                    onClick={() => addToast('User Changes Saved Successfully!', 'success')}
+                    className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer"
                   >
                     Update Changes
                   </button>
@@ -362,8 +373,8 @@ export default function UserManagement() {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => alert('Exporting user directory report...')}
-                className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-2"
+                onClick={() => addToast('Exporting user directory report...', 'info')}
+                className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4 text-indigo-600" />
                 <span>Export List Report</span>
@@ -601,6 +612,9 @@ export default function UserManagement() {
           </div>
         </div>
       )}
+
+      {/* Render Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
 
     </div>
   );

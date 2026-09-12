@@ -8,20 +8,127 @@ import {
 
 type SettingsTab = 'personal' | 'security';
 
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
+import { useAuthStore } from '@/store/authStore';
+
 export default function Settings() {
+  const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState<SettingsTab>('personal');
 
+  // Toasts state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmText: string;
+    variant: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    confirmText: 'Confirm',
+    variant: 'primary',
+    onConfirm: () => {},
+  });
+
+  const openConfirmModal = (
+    title: string,
+    description: string,
+    confirmText: string,
+    variant: 'danger' | 'warning' | 'primary',
+    onConfirm: () => void
+  ) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      description,
+      confirmText,
+      variant,
+      onConfirm,
+    });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  // Avatar Upload State & Ref
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatar || null);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setAvatarUrl(event.target?.result as string);
+        addToast('Profile photo updated successfully!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Personal Info State
-  const [fullName, setFullName] = useState('Isuru Lakmal');
-  const [username, setUsername] = useState('@isuru_lakmal_23');
-  const [email, setEmail] = useState('isurulakmal@gmail.com');
-  const [dateOfBirth, setDateOfBirth] = useState('1998-04-02');
-  const [role, setRole] = useState('Super Administrator');
-  const [bio, setBio] = useState('Experienced system administrator managing OmniAI platform infrastructure and multi-tenant workspace configurations across enterprise clients.');
+  const [fullName, setFullName] = useState(user?.name || user?.fullName || (user?.email ? user.email.split('@')[0] : ''));
+  const [username, setUsername] = useState(user?.username || (user?.email ? `@${user.email.split('@')[0]}` : ''));
+  const [email, setEmail] = useState(user?.email || '');
+  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth || '');
+  const [role, setRole] = useState(user?.role === 'super_admin' ? 'Super Administrator' : (user?.role || 'System Admin'));
+  const [bio, setBio] = useState(user?.bio || '');
+
+  // Linked Accounts State
+  const [linkedAccounts, setLinkedAccounts] = useState([
+    { id: 'google', label: 'Google Account', hint: user?.email || 'superadmin@slt.lk', linked: true, color: 'text-red-500', icon: Globe2 },
+    { id: 'github', label: 'GitHub', hint: 'Not Connected', linked: false, color: 'text-slate-800', icon: GitBranch },
+  ]);
+
+  // Active Sessions State
+  const [sessions, setSessions] = useState([
+    { id: '1', device: 'Windows PC — Chrome', location: 'Colombo, Sri Lanka', time: 'Current Session', active: true },
+    { id: '2', device: 'iPhone 14 — Safari', location: 'Colombo, Sri Lanka', time: '2 hours ago', active: false },
+  ]);
 
   // Display Preferences
-  const [darkMode, setDarkMode] = useState(false);
-  const [compactView, setCompactView] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true' || document.documentElement.classList.contains('dark');
+  });
+
+  const [compactView, setCompactView] = useState(() => {
+    return localStorage.getItem('compactView') === 'true' || document.body.classList.contains('compact-view');
+  });
+
+  const toggleDarkMode = (value: boolean) => {
+    setDarkMode(value);
+    localStorage.setItem('darkMode', String(value));
+    if (value) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    addToast(value ? 'Dark Mode Enabled' : 'Light Mode Enabled', 'info');
+  };
+
+  const toggleCompactView = (value: boolean) => {
+    setCompactView(value);
+    localStorage.setItem('compactView', String(value));
+    if (value) {
+      document.body.classList.add('compact-view');
+    } else {
+      document.body.classList.remove('compact-view');
+    }
+    addToast(value ? 'Compact View Enabled' : 'Standard View Enabled', 'info');
+  };
 
   // Security State
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
@@ -33,16 +140,20 @@ export default function Settings() {
 
   const handleSavePersonal = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Personal information saved successfully!');
+    addToast('Personal information saved successfully!', 'success');
   };
 
   const handleSavePassword = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match!');
+    if (!currentPassword) {
+      addToast('Please enter your current password.', 'error');
       return;
     }
-    alert('Password changed successfully!');
+    if (newPassword !== confirmPassword) {
+      addToast('New passwords do not match!', 'error');
+      return;
+    }
+    addToast('Password changed successfully!', 'success');
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -145,14 +256,29 @@ export default function Settings() {
 
                     {/* Avatar Section */}
                     <div className="lg:col-span-3 flex flex-col items-center gap-4">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handlePhotoUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
                       <div className="relative group">
-                        <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-3xl flex items-center justify-center shadow-xl shadow-indigo-500/25">
-                          IL
-                        </div>
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt="Profile Avatar"
+                            className="w-28 h-28 rounded-3xl object-cover shadow-xl shadow-indigo-500/25 border-2 border-indigo-500"
+                          />
+                        ) : (
+                          <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-3xl flex items-center justify-center shadow-xl shadow-indigo-500/25">
+                            {fullName ? fullName.substring(0, 2).toUpperCase() : (email ? email.substring(0, 2).toUpperCase() : 'US')}
+                          </div>
+                        )}
                         <button
                           type="button"
                           className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => alert('Photo upload dialog')}
+                          onClick={() => fileInputRef.current?.click()}
                         >
                           <Camera className="w-6 h-6 text-white" />
                         </button>
@@ -163,8 +289,8 @@ export default function Settings() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => alert('Change photo')}
-                        className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center gap-1.5"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer"
                       >
                         <Camera className="w-3.5 h-3.5" />
                         Change Photo
@@ -283,7 +409,7 @@ export default function Settings() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setDarkMode(!darkMode)}
+                      onClick={() => toggleDarkMode(!darkMode)}
                       className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-indigo-600' : 'bg-slate-300'}`}
                     >
                       <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-0'}`} />
@@ -296,7 +422,7 @@ export default function Settings() {
                       <p className="text-[10px] text-slate-400">Reduce spacing for a denser, information-rich layout</p>
                     </div>
                     <button
-                      onClick={() => setCompactView(!compactView)}
+                      onClick={() => toggleCompactView(!compactView)}
                       className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${compactView ? 'bg-indigo-600' : 'bg-slate-300'}`}
                     >
                       <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${compactView ? 'translate-x-6' : 'translate-x-0'}`} />
@@ -319,8 +445,8 @@ export default function Settings() {
                       <p className="text-[10px] text-slate-400">Download a copy of all your account data and activity</p>
                     </div>
                     <button
-                      onClick={() => alert('Preparing data export...')}
-                      className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-1.5 shadow-xs"
+                      onClick={() => addToast('Data export initiated. Download link sent to email.', 'info')}
+                      className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-1.5 shadow-xs cursor-pointer"
                     >
                       <Download className="w-3.5 h-3.5 text-indigo-600" />
                       Export Data
@@ -334,8 +460,19 @@ export default function Settings() {
                       <p className="text-[10px] text-red-400">Permanently remove your account and all associated data</p>
                     </div>
                     <button
-                      onClick={() => { if (confirm('Are you sure? This action is irreversible!')) alert('Account deletion initiated.'); }}
-                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
+                      onClick={() =>
+                        openConfirmModal(
+                          'Delete Account',
+                          'Are you sure you want to permanently delete your account? All associated workspace data, channels, and logs will be permanently removed. This action cannot be undone.',
+                          'Delete Account',
+                          'danger',
+                          () => {
+                            closeConfirmModal();
+                            addToast('Account deletion request processed successfully.', 'error');
+                          }
+                        )
+                      }
+                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       Delete
@@ -352,11 +489,8 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-3">
-                  {[
-                    { label: 'Google Account', icon: Globe2, hint: 'isurulakmal@gmail.com', linked: true, color: 'text-red-500' },
-                    { label: 'GitHub', icon: GitBranch, hint: 'Not Connected', linked: false, color: 'text-slate-800' },
-                  ].map((acct) => (
-                    <div key={acct.label} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                  {linkedAccounts.map((acct) => (
+                    <div key={acct.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
                       <div className="flex items-center gap-3">
                         <acct.icon className={`w-5 h-5 ${acct.color}`} />
                         <div>
@@ -365,8 +499,29 @@ export default function Settings() {
                         </div>
                       </div>
                       <button
-                        onClick={() => alert(`${acct.linked ? 'Unlinking' : 'Linking'} ${acct.label}...`)}
-                        className={`px-4 py-1.5 rounded-xl text-[11px] font-bold border ${
+                        onClick={() => {
+                          if (acct.linked) {
+                            openConfirmModal(
+                              `Unlink ${acct.label}`,
+                              `Are you sure you want to unlink ${acct.label} (${acct.hint}) from your OmniAI account?`,
+                              'Unlink Account',
+                              'warning',
+                              () => {
+                                closeConfirmModal();
+                                setLinkedAccounts((prev) =>
+                                  prev.map((a) => (a.id === acct.id ? { ...a, linked: false, hint: 'Not Connected' } : a))
+                                );
+                                addToast(`${acct.label} unlinked successfully.`, 'info');
+                              }
+                            );
+                          } else {
+                            setLinkedAccounts((prev) =>
+                              prev.map((a) => (a.id === acct.id ? { ...a, linked: true, hint: email || 'Connected' } : a))
+                            );
+                            addToast(`${acct.label} connected successfully.`, 'success');
+                          }
+                        }}
+                        className={`px-4 py-1.5 rounded-xl text-[11px] font-bold border cursor-pointer transition-all ${
                           acct.linked
                             ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
                             : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
@@ -403,7 +558,10 @@ export default function Settings() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                    onClick={() => {
+                      setTwoFactorEnabled(!twoFactorEnabled);
+                      addToast(!twoFactorEnabled ? '2FA Enabled' : '2FA Disabled', 'info');
+                    }}
                     className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${twoFactorEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}
                   >
                     <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${twoFactorEnabled ? 'translate-x-7' : 'translate-x-0'}`} />
@@ -428,7 +586,10 @@ export default function Settings() {
                         </div>
                       </div>
                       <button
-                        onClick={() => setSmsAuthEnabled(!smsAuthEnabled)}
+                        onClick={() => {
+                          setSmsAuthEnabled(!smsAuthEnabled);
+                          addToast(!smsAuthEnabled ? 'SMS Auth Enabled' : 'SMS Auth Disabled', 'info');
+                        }}
                         className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${smsAuthEnabled ? 'bg-indigo-600' : 'bg-slate-300'}`}
                       >
                         <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${smsAuthEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
@@ -447,7 +608,10 @@ export default function Settings() {
                         </div>
                       </div>
                       <button
-                        onClick={() => setAppAuthEnabled(!appAuthEnabled)}
+                        onClick={() => {
+                          setAppAuthEnabled(!appAuthEnabled);
+                          addToast(!appAuthEnabled ? 'Authenticator App Enabled' : 'Authenticator App Disabled', 'info');
+                        }}
                         className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${appAuthEnabled ? 'bg-indigo-600' : 'bg-slate-300'}`}
                       >
                         <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${appAuthEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
@@ -519,7 +683,7 @@ export default function Settings() {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      className="px-8 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs shadow-md flex items-center gap-2"
+                      className="px-8 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
                     >
                       <Check className="w-4 h-4" />
                       Update Password
@@ -536,11 +700,8 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-3">
-                  {[
-                    { device: 'Windows PC — Chrome', location: 'Colombo, Sri Lanka', time: 'Current Session', active: true },
-                    { device: 'iPhone 14 — Safari', location: 'Colombo, Sri Lanka', time: '2 hours ago', active: false },
-                  ].map((session, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                  {sessions.map((session) => (
+                    <div key={session.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
                       <div>
                         <p className="text-xs font-bold text-slate-900">{session.device}</p>
                         <p className="text-[10px] text-slate-400">{session.location} · {session.time}</p>
@@ -549,8 +710,20 @@ export default function Settings() {
                         <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">● Active</span>
                       ) : (
                         <button
-                          onClick={() => alert('Session terminated')}
-                          className="px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-700 font-bold text-[11px] hover:bg-red-100"
+                          onClick={() =>
+                            openConfirmModal(
+                              'Revoke Session',
+                              `Are you sure you want to revoke the active session on ${session.device}? The session will be ended immediately.`,
+                              'Revoke Session',
+                              'warning',
+                              () => {
+                                closeConfirmModal();
+                                setSessions((prev) => prev.filter((s) => s.id !== session.id));
+                                addToast(`Session on ${session.device} revoked successfully.`, 'info');
+                              }
+                            )
+                          }
+                          className="px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-700 font-bold text-[11px] hover:bg-red-100 cursor-pointer transition-all"
                         >
                           Revoke
                         </button>
@@ -560,8 +733,20 @@ export default function Settings() {
                 </div>
 
                 <button
-                  onClick={() => alert('All other sessions terminated')}
-                  className="w-full py-2.5 rounded-xl border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50 flex items-center justify-center gap-2"
+                  onClick={() =>
+                    openConfirmModal(
+                      'Revoke All Other Sessions',
+                      'Are you sure you want to log out all other active sessions across all devices? Only your current session will remain active.',
+                      'Revoke All Sessions',
+                      'danger',
+                      () => {
+                        closeConfirmModal();
+                        setSessions((prev) => prev.filter((s) => s.active));
+                        addToast('All other active sessions have been revoked.', 'success');
+                      }
+                    )
+                  }
+                  className="w-full py-2.5 rounded-xl border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50 flex items-center justify-center gap-2 cursor-pointer transition-all"
                 >
                   <LogOut className="w-4 h-4" />
                   Revoke All Other Sessions
@@ -572,6 +757,58 @@ export default function Settings() {
 
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
+            <div
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
+                confirmModal.variant === 'danger'
+                  ? 'bg-red-100 text-red-600'
+                  : confirmModal.variant === 'warning'
+                  ? 'bg-amber-100 text-amber-600'
+                  : 'bg-indigo-100 text-indigo-600'
+              }`}
+            >
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2">
+              {confirmModal.title}
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed mb-6 font-normal">
+              {confirmModal.description}
+            </p>
+
+            <div className="w-full flex items-center gap-3">
+              <button
+                type="button"
+                onClick={closeConfirmModal}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmModal.onConfirm}
+                className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs shadow-md transition-all cursor-pointer ${
+                  confirmModal.variant === 'danger'
+                    ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20'
+                    : confirmModal.variant === 'warning'
+                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/20'
+                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20'
+                }`}
+              >
+                {confirmModal.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Render Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
 
     </div>
   );

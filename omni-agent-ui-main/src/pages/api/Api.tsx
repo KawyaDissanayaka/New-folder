@@ -11,12 +11,35 @@ export default function Api() {
   const [newApiName, setNewApiName] = useState('');
   const [newApiEndpoint, setNewApiEndpoint] = useState('');
 
-  const organizations = [
-    { id: '1', name: 'ABC Company (pvt) Ltd', logo: 'Abc', color: 'from-blue-600 to-cyan-500' },
-    { id: '2', name: 'Delta Company (pvt) Ltd', logo: 'Δ', color: 'from-emerald-500 to-teal-600' },
-    { id: '3', name: 'Lanka Finance (pvt) Ltd', logo: 'LK', color: 'from-red-600 to-rose-700' },
-    { id: '4', name: 'Roamify Innovation Center', logo: 'R', color: 'from-purple-600 to-indigo-600' },
-  ];
+  const [organizations, setOrganizations] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchOrgs = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/registrations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.registrations)) {
+            const activeOrgs = data.registrations
+              .filter((r: any) => r.status === 'Approved')
+              .map((r: any, idx: number) => ({
+                id: r.id || String(idx + 1),
+                name: r.companyName,
+                logo: r.companyName.substring(0, 2).toUpperCase(),
+                color: 'from-blue-600 to-indigo-600',
+              }));
+            setOrganizations(activeOrgs);
+            if (activeOrgs.length > 0 && !selectedOrg) {
+              setSelectedOrg(activeOrgs[0].name);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Backend unreachable:', err);
+      }
+    };
+    fetchOrgs();
+  }, []);
 
   const tabs = [
     { id: 'billing', label: 'Billing API' },

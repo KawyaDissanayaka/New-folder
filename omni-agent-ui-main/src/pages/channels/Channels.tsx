@@ -3,10 +3,22 @@ import { MessageSquare, Smartphone, Globe, Mail, CheckCircle2, AlertTriangle, Re
 import InputField from '@/components/InputField';
 import Button from '@/components/Button';
 
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
+
 export default function Channels() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>('ABC Company (pvt) Ltd');
   const [selectedChannel, setSelectedChannel] = useState<string | null>('whatsapp');
   const [channelEnabled, setChannelEnabled] = useState(true);
+
+  // Toasts State
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Form State for WhatsApp Config
   const [accountSid, setAccountSid] = useState('AC77892X00884L1299843-SLT');
@@ -16,16 +28,39 @@ export default function Channels() {
   const [aiHandoffThreshold, setAiHandoffThreshold] = useState('85%');
   const [offlineMessagingEnabled, setOfflineMessagingEnabled] = useState(false);
 
-  const organizations = [
-    { id: '1', name: 'ABC Company (pvt) Ltd', logo: 'Abc', color: 'from-blue-600 to-cyan-500' },
-    { id: '2', name: 'Delta Company (pvt) Ltd', logo: 'Δ', color: 'from-emerald-500 to-teal-600' },
-    { id: '3', name: 'Lanka Finance (pvt) Ltd', logo: 'LK', color: 'from-red-600 to-rose-700' },
-    { id: '4', name: 'Roamify Innovation Center', logo: 'R', color: 'from-purple-600 to-indigo-600' },
-  ];
+  const [organizations, setOrganizations] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchOrgs = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/registrations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.registrations)) {
+            const activeOrgs = data.registrations
+              .filter((r: any) => r.status === 'Approved')
+              .map((r: any, idx: number) => ({
+                id: r.id || String(idx + 1),
+                name: r.companyName,
+                logo: r.companyName.substring(0, 2).toUpperCase(),
+                color: 'from-blue-600 to-indigo-600',
+              }));
+            setOrganizations(activeOrgs);
+            if (activeOrgs.length > 0 && !selectedOrg) {
+              setSelectedOrg(activeOrgs[0].name);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Backend unreachable:', err);
+      }
+    };
+    fetchOrgs();
+  }, []);
 
   const handleSaveChannelConfig = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('WhatsApp Channel Configuration Saved Successfully!');
+    addToast('WhatsApp Channel Configuration Saved Successfully!', 'success');
   };
 
   return (
@@ -291,8 +326,8 @@ export default function Channels() {
                     <label className="block text-xs font-bold text-slate-700">Auth Token</label>
                     <button
                       type="button"
-                      onClick={() => alert('Credentials Verified!')}
-                      className="text-[11px] font-bold text-indigo-600 hover:underline"
+                      onClick={() => addToast('Credentials Verified!', 'success')}
+                      className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
                     >
                       Verify Credentials
                     </button>
@@ -427,6 +462,9 @@ export default function Channels() {
 
         </div>
       )}
+
+      {/* Render Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
 
     </div>
   );

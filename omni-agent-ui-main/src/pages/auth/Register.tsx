@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Bot, Mail, Building2, Globe, User, Layers, Cpu, ArrowRight, Phone, Lock, MapPin, FileText, ChevronRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
 
 // ⭐ Defined OUTSIDE Register — prevents remounting on every keystroke
 // ⭐ inputClass does NOT take errors as param to avoid recreating on every render
@@ -39,6 +40,16 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Toasts state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   const [formData, setFormData] = useState({
     // Step 1 — Company Info
@@ -124,7 +135,7 @@ export default function Register() {
       if (!res.ok) throw new Error('Server error');
       navigate('/register-success');
     } catch {
-      alert('⚠️ Could not connect to server. Please make sure the backend is running.');
+      addToast('Could not connect to server. Please make sure the backend is running.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -545,6 +556,8 @@ export default function Register() {
           </div>
         </div>
       </div>
+
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }

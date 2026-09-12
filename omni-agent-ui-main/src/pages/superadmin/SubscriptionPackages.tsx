@@ -3,8 +3,20 @@ import { CreditCard, DollarSign, Package, Check, Save, Download } from 'lucide-r
 import InputField from '@/components/InputField';
 import Button from '@/components/Button';
 
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
+
 export default function SubscriptionPackages() {
   const [activeTab, setActiveTab] = useState<'payments' | 'config'>('payments');
+
+  // Toasts state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Transactions State
   const [transactions] = useState([
@@ -23,7 +35,7 @@ export default function SubscriptionPackages() {
 
   const handleSaveConfigs = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Subscription Package Configurations Saved Successfully!');
+    addToast('Subscription Package Configurations Saved Successfully!', 'success');
   };
 
   return (
@@ -70,8 +82,8 @@ export default function SubscriptionPackages() {
               <span>Payment Details ({transactions.length} transactions)</span>
             </h3>
             <button
-              onClick={() => alert('Exporting Payment Audit Records...')}
-              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-2"
+              onClick={() => addToast('Exporting Payment Audit Records...', 'info')}
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-2 cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export Audit</span>
@@ -218,6 +230,9 @@ export default function SubscriptionPackages() {
 
         </form>
       )}
+
+      {/* Render Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
 
     </div>
   );

@@ -3,11 +3,23 @@ import { Bell, CheckCircle2, ShieldAlert, Cpu, Layers, RefreshCw, Check, Downloa
 import Button from '@/components/Button';
 import InputField from '@/components/InputField';
 
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
+
 export default function Notifications() {
   const [selectedOrg, setSelectedOrg] = useState<string | null>('ABC Company (pvt) Ltd');
   const [viewMode, setViewMode] = useState<'management' | 'personal'>('management');
   const [channelTab, setChannelTab] = useState<'whatsapp' | 'messenger' | 'sms' | 'email' | 'web'>('whatsapp');
   const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'compose' | 'templates' | 'logs'>('dashboard');
+
+  // Toasts state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Broadcast Compose State
   const [broadcastHeadline, setBroadcastHeadline] = useState('');
@@ -17,28 +29,71 @@ export default function Notifications() {
   const [scheduleTime, setScheduleTime] = useState('');
   const [testPhoneNumber, setTestPhoneNumber] = useState('+94 77 123 4567');
 
-  const organizations = [
-    { id: '1', name: 'ABC Company (pvt) Ltd', logo: 'Abc', color: 'from-blue-600 to-cyan-500' },
-    { id: '2', name: 'Delta Company (pvt) Ltd', logo: 'Δ', color: 'from-emerald-500 to-teal-600' },
-    { id: '3', name: 'Lanka Finance (pvt) Ltd', logo: 'LK', color: 'from-red-600 to-rose-700' },
-    { id: '4', name: 'Roamify Innovation Center', logo: 'R', color: 'from-purple-600 to-indigo-600' },
-  ];
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [personalNotifications, setPersonalNotifications] = useState<any[]>([]);
+  const [deliveryLogs, setDeliveryLogs] = useState<any[]>([]);
 
-  // Personal Alerts State
-  const [personalNotifications, setPersonalNotifications] = useState([
-    { id: 1, title: 'Agent Milestone Achieved', message: '"Customer Support V2" agent successfully resolved 500+ tickets in Acme Corp workspace today.', time: '45 mins ago', type: 'milestone', read: false, icon: Cpu, color: 'bg-purple-100 text-purple-700 border-purple-200' },
-    { id: 2, title: 'New Workspace Created', message: 'New Workspace "CyberByte Systems" was successfully provisioned by Admin.', time: '15 mins ago', type: 'info', read: false, icon: Layers, color: 'bg-blue-100 text-blue-700 border-blue-200' },
-    { id: 3, title: 'Security Alert: Unrecognized Login', message: 'Security login detected from an unrecognized IP address in "Wayne Ent" workspace.', time: '2 hours ago', type: 'alert', read: true, icon: ShieldAlert, color: 'bg-red-100 text-red-700 border-red-200' },
-    { id: 4, title: 'API Connection Refreshed', message: 'System alert: The WhatsApp API connection for the Global Omnichannel router was automatically refreshed.', time: 'Yesterday, 7:42 PM', type: 'system', read: true, icon: RefreshCw, color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  ]);
+  React.useEffect(() => {
+    // Fetch real organizations from backend API
+    const fetchOrgs = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/registrations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.registrations)) {
+            const activeOrgs = data.registrations
+              .filter((r: any) => r.status === 'Approved')
+              .map((r: any, idx: number) => ({
+                id: r.id || String(idx + 1),
+                name: r.companyName,
+                logo: r.companyName.substring(0, 2).toUpperCase(),
+                color: 'from-blue-600 to-indigo-600',
+              }));
+            setOrganizations(activeOrgs);
+            if (activeOrgs.length > 0 && !selectedOrg) {
+              setSelectedOrg(activeOrgs[0].name);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Backend server unreachable for organizations list:', err);
+      }
+    };
 
-  // Delivery Logs State
-  const [deliveryLogs, setDeliveryLogs] = useState([
-    { id: '#CN-TX-92833', recipient: '+94 77 123 4567', user: 'k_perera_23', status: 'Read', time: 'Oct 24, 2023 - 14:32:01', color: 'bg-emerald-100 text-emerald-800' },
-    { id: '#CN-TX-92830', recipient: 'j.doe@enterprise.com', user: 'j_doe_corp', status: 'Delivered', time: 'Oct 24, 2023 - 14:31:45', color: 'bg-blue-100 text-blue-800' },
-    { id: '#CN-TX-92828', recipient: '+94 71 888 2211', user: 'a_nimal', status: 'Failed', time: 'Oct 24, 2023 - 14:30:12', color: 'bg-red-100 text-red-800' },
-    { id: '#CN-TX-92826', recipient: '+94 11 200 3000', user: 'info_partner', status: 'Sent', time: 'Oct 24, 2022 - 14:29:59', color: 'bg-slate-100 text-slate-700' },
-  ]);
+    // Fetch delivery logs from backend API
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/telemetry-logs');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.logs)) {
+            setDeliveryLogs(data.logs);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend server unreachable for telemetry logs:', err);
+      }
+    };
+
+    // Fetch personal notifications from backend API
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/notifications');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.notifications)) {
+            setPersonalNotifications(data.notifications);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend server unreachable for notifications:', err);
+      }
+    };
+
+    fetchOrgs();
+    fetchLogs();
+    fetchNotifications();
+  }, []);
 
   const handleInsertTag = (tag: string) => {
     setBroadcastBody((prev) => prev + ` {{${tag}}}`);
@@ -109,8 +164,8 @@ export default function Notifications() {
               </div>
 
               <button
-                onClick={() => alert('Exporting Notification List Report...')}
-                className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-2"
+                onClick={() => addToast('Exporting Notification List Report...', 'info')}
+                className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold shadow-xs flex items-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4 text-indigo-600" />
                 <span>Export List Report</span>
@@ -392,16 +447,16 @@ export default function Notifications() {
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                       <button
                         type="button"
-                        onClick={() => alert('Saved as Draft!')}
-                        className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50"
+                        onClick={() => addToast('Saved as Draft!', 'info')}
+                        className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 cursor-pointer"
                       >
                         Save as Draft
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => alert('Dispatching Broadcast...')}
-                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md"
+                        onClick={() => addToast('Dispatching Broadcast...', 'success')}
+                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md cursor-pointer"
                       >
                         Dispatch Broadcast
                       </button>
@@ -424,8 +479,8 @@ export default function Notifications() {
                           className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
                         />
                         <button
-                          onClick={() => alert(`Test message sent to ${testPhoneNumber}`)}
-                          className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                          onClick={() => addToast(`Test message sent to ${testPhoneNumber}`, 'success')}
+                          className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
                         >
                           Send Test
                         </button>
@@ -467,8 +522,8 @@ export default function Notifications() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-slate-900">Message Templates</h3>
                     <button
-                      onClick={() => alert('Creating template...')}
-                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md"
+                      onClick={() => addToast('Creating new template modal...', 'info')}
+                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md cursor-pointer"
                     >
                       + Create New Template
                     </button>
@@ -615,6 +670,9 @@ export default function Notifications() {
 
         </div>
       )}
+
+      {/* Render Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
 
     </div>
   );

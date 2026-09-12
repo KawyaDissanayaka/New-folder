@@ -3,6 +3,8 @@ import { Building2, Search, CheckCircle2, XCircle, Filter, Download, ArrowLeft, 
 import InputField from '@/components/InputField';
 import Button from '@/components/Button';
 
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
+
 const API = 'http://localhost:3001';
 
 export default function OrganizationManagement() {
@@ -15,20 +17,81 @@ export default function OrganizationManagement() {
   const [requestsList, setRequestsList] = useState<any[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
-  // Fetch registrations from backend
+  // Toasts state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const initialCompaniesByIndustry: Record<string, any[]> = {
+    tech: [],
+    finance: [],
+    edu: [],
+    healthcare: [],
+    manufacturing: [],
+    other: [],
+  };
+
+  const [companies, setCompanies] = useState<Record<string, any[]>>(initialCompaniesByIndustry);
+
+  // Fetch registrations from backend (pending & approved)
   const fetchRequests = async () => {
     setLoadingRequests(true);
     try {
-      const res = await fetch(`${API}/api/registrations?status=pending`);
-      const data = await res.json();
-      setRequestsList(data);
+      // Fetch pending requests
+      const resPending = await fetch(`${API}/api/registrations?status=pending`);
+      const pendingData = await resPending.json();
+      setRequestsList(Array.isArray(pendingData) ? pendingData : []);
+
+      // Fetch approved registrations & add to active companies
+      const resApproved = await fetch(`${API}/api/registrations?status=approved`);
+      const approvedData = await resApproved.json();
+
+      const freshCompanies: Record<string, any[]> = {
+        tech: [],
+        finance: [],
+        edu: [],
+        healthcare: [],
+        manufacturing: [],
+        other: [],
+      };
+
+      if (Array.isArray(approvedData) && approvedData.length > 0) {
+        approvedData.forEach((req: any) => {
+          const rawInd = (req.industry || req.companyType || 'tech').toLowerCase();
+          let targetTab = 'tech';
+          if (rawInd.includes('finance')) targetTab = 'finance';
+          else if (rawInd.includes('edu')) targetTab = 'edu';
+          else if (rawInd.includes('health')) targetTab = 'healthcare';
+          else if (rawInd.includes('manuf')) targetTab = 'manufacturing';
+          else if (rawInd.includes('tech')) targetTab = 'tech';
+          else targetTab = 'other';
+
+          const compObj = {
+            id: req.id,
+            name: req.companyName || req.name,
+            email: req.companyEmail || req.email,
+            adminName: req.adminName || 'Admin',
+            status: 'ACTIVE',
+            lastLogin: 'Approved',
+            industry: req.industry || req.companyType || 'Technology',
+            phone: req.phone || req.adminPhone || '-',
+            location: req.city || req.country || 'Sri Lanka',
+            website: req.website || '-',
+          };
+
+          freshCompanies[targetTab].push(compObj);
+        });
+      }
+      setCompanies(freshCompanies);
     } catch {
-      console.warn('Backend not reachable — using mock data');
-      setRequestsList([
-        { id: 101, companyName: 'Acme Global Systems Ltd', adminName: 'Arjuna Lakmal', email: 'arjuna.l@acmeglobal.com', date: '2023-11-20', industry: 'Technology', status: 'pending' },
-        { id: 102, companyName: 'Nexus Telecommunications Ltd', adminName: 'Nimali Jayasinghe', email: 'nimali@nexustelecom.com', date: '2023-11-20', industry: 'Telecom', status: 'pending' },
-        { id: 103, companyName: 'Lanka Retail Holdings', adminName: 'Kusal Mendis', email: 'kusal@lankaretail.lk', date: '2023-11-19', industry: 'E-commerce', status: 'pending' },
-      ]);
+      console.warn('Backend not reachable');
+      setRequestsList([]);
+      setCompanies({ tech: [], finance: [], edu: [], healthcare: [], manufacturing: [], other: [] });
     } finally {
       setLoadingRequests(false);
     }
@@ -38,19 +101,52 @@ export default function OrganizationManagement() {
     fetchRequests();
   }, []);
 
-  const handleApprove = async (id: number, companyName: string) => {
+  const handleApprove = async (id: number, req: any) => {
+    const companyName = req.companyName || req.name;
     try {
       await fetch(`${API}/api/registrations/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'approved' }),
       });
-      setRequestsList((prev) => prev.filter((r) => r.id !== id));
-      alert(`✅ Approved: ${companyName}`);
     } catch {
-      alert(`✅ Approved: ${companyName} (offline mode)`);
-      setRequestsList((prev) => prev.filter((r) => r.id !== id));
+      console.warn('Backend offline, updating local state only');
     }
+
+    setRequestsList((prev) => prev.filter((r) => r.id !== id));
+
+    const rawInd = (req.industry || req.companyType || 'tech').toLowerCase();
+    let targetTab = 'tech';
+    if (rawInd.includes('finance')) targetTab = 'finance';
+    else if (rawInd.includes('edu')) targetTab = 'edu';
+    else if (rawInd.includes('health')) targetTab = 'healthcare';
+    else if (rawInd.includes('manuf')) targetTab = 'manufacturing';
+    else if (rawInd.includes('tech')) targetTab = 'tech';
+    else targetTab = 'other';
+
+    const newCompany = {
+      id: req.id || Date.now(),
+      name: req.companyName || req.name,
+      email: req.companyEmail || req.email,
+      adminName: req.adminName || 'Admin',
+      status: 'ACTIVE',
+      lastLogin: 'Just approved',
+      industry: req.industry || req.companyType || 'Technology',
+      phone: req.phone || req.adminPhone || '-',
+      location: req.city || req.country || 'Sri Lanka',
+      website: req.website || '-',
+    };
+
+    setCompanies((prev) => ({
+      ...prev,
+      [targetTab]: [newCompany, ...(prev[targetTab] || []).filter((c: any) => c.id !== newCompany.id)],
+    }));
+
+    // Auto switch viewMode to active and targetTab to show newly approved company
+    setViewMode('active');
+    setActiveTab(targetTab as any);
+
+    addToast(`Approved: "${companyName}"! Company is now ACTIVE under ${targetTab.toUpperCase()}.`, 'success');
   };
 
   const handleReject = async (id: number, companyName: string) => {
@@ -60,44 +156,15 @@ export default function OrganizationManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'rejected' }),
       });
-      setRequestsList((prev) => prev.filter((r) => r.id !== id));
-      alert(`❌ Rejected: ${companyName}`);
     } catch {
-      alert(`❌ Rejected: ${companyName} (offline mode)`);
-      setRequestsList((prev) => prev.filter((r) => r.id !== id));
+      console.warn('Backend offline, updating local state only');
     }
+
+    setRequestsList((prev) => prev.filter((r) => r.id !== id));
+    addToast(`Rejected registration request for: "${companyName}".`, 'info');
   };
 
-  // Mock Active Companies grouped by Industry
-  const companiesByIndustry = {
-    tech: [
-      { id: 1, name: 'ABC Company (pvt) LTD', email: 'abcCom@slt.lk', adminName: 'Isuru Lakmal', status: 'ACTIVE', lastLogin: '2 hours ago', industry: 'Technology', phone: '0112345757', location: 'Colombo', website: 'www.abc.lk' },
-      { id: 2, name: 'Infiware Tec (pvt) LTD', email: 'kasun@infi.lk', adminName: 'Thirukumar Cathiyajini', status: 'ACTIVE', lastLogin: 'Yesterday, 14:20', industry: 'Technology', phone: '0112998877', location: 'Kandy', website: 'www.infi.lk' },
-      { id: 3, name: 'Hemini Tec (pvt) LTD', email: 'hemini.m@partner.lk', adminName: 'Sanjan Dissanayake', status: 'DEACTIVATED', lastLogin: '12 Days ago', industry: 'Technology', phone: '0112443322', location: 'Galle', website: 'www.hemini.lk' },
-    ],
-    finance: [
-      { id: 4, name: 'Jayawickrama Finance (pvt) LTD', email: 'jayawickrama@slt.lk', adminName: 'Gayan Dhanusha', status: 'ACTIVE', lastLogin: '5 hours ago', industry: 'Finance', phone: '0112776655', location: 'Colombo', website: 'www.jwfin.lk' },
-      { id: 5, name: 'JK Company (pvt) LTD', email: 'jkcom@slt.lk', adminName: 'Dinesh Chandimal', status: 'ACTIVE', lastLogin: 'Yesterday, 14:20', industry: 'Finance', phone: '0112665544', location: 'Negombo', website: 'www.jkcom.lk' },
-      { id: 6, name: 'Rammuthu Finance (pvt) LTD', email: 'rammuthu.f@partner.lk', adminName: 'Lasith Malinga', status: 'DEACTIVATED', lastLogin: '2 Days ago', industry: 'Finance', phone: '0112887766', location: 'Matara', website: 'www.rammuthu.lk' },
-    ],
-    edu: [
-      { id: 7, name: 'Siyane Education Center', email: 'siyaneedu@slt.lk', adminName: 'Nimal Wijesinghe', status: 'ACTIVE', lastLogin: '3 hours ago', industry: 'Education', phone: '0112112233', location: 'Gampaha', website: 'www.siyane.lk' },
-      { id: 8, name: 'Saniyo Edu (pvt) LTD', email: 'saniyoedu@slt.lk', adminName: 'Malaka Priyadarshana', status: 'ACTIVE', lastLogin: 'Yesterday, 14:20', industry: 'Education', phone: '0112334455', location: 'Kurunegala', website: 'www.saniyo.lk' },
-      { id: 9, name: 'Asiri Edu (pvt) LTD', email: 'asiriedu.m@partner.lk', adminName: 'Yoshan Chamara', status: 'DEACTIVATED', lastLogin: '12 Days ago', industry: 'Education', phone: '0112556677', location: 'Jaffna', website: 'www.asiriedu.lk' },
-    ],
-    healthcare: [
-      { id: 10, name: 'HSE Health Care', email: 'hsehealth@slt.lk', adminName: 'Dilshan Dhanuka', status: 'ACTIVE', lastLogin: '2 hours ago', industry: 'Health Care', phone: '0112991100', location: 'Colombo', website: 'www.hsehealth.lk' },
-      { id: 11, name: 'Asiri PVT LTD', email: 'asiripvt@slt.lk', adminName: 'Dinesh Chandimal', status: 'ACTIVE', lastLogin: 'Yesterday, 14:20', industry: 'Health Care', phone: '0112992200', location: 'Colombo', website: 'www.asiri.lk' },
-      { id: 12, name: 'SCB Health care', email: 'scb.h@partner.lk', adminName: 'Lasith Malinga', status: 'DEACTIVATED', lastLogin: '10 Days ago', industry: 'Health Care', phone: '0112993300', location: 'Kandy', website: 'www.scb.lk' },
-    ],
-    manufacturing: [],
-    other: [],
-  };
-
-  const requestsList_unused = null; // replaced by state above
-
-
-  const currentCompanies = companiesByIndustry[activeTab] || [];
+  const currentCompanies = companies[activeTab] || [];
 
   const handleOpenDelete = (company: any) => {
     setDeletingOrg(company);
@@ -105,8 +172,14 @@ export default function OrganizationManagement() {
   };
 
   const handleConfirmDelete = () => {
+    if (deletingOrg) {
+      setCompanies((prev) => ({
+        ...prev,
+        [activeTab]: (prev[activeTab] || []).filter((c: any) => c.id !== deletingOrg.id),
+      }));
+    }
     setShowDeleteModal(false);
-    alert(`Organization "${deletingOrg?.name}" has been deleted.`);
+    addToast(`Organization "${deletingOrg?.name}" has been deleted.`, 'error');
   };
 
   const handleOpenDetail = (company: any) => {
@@ -125,8 +198,8 @@ export default function OrganizationManagement() {
         </div>
 
         <button
-          onClick={() => alert('Exporting Full Organization List Report...')}
-          className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold shadow-xs hover:bg-slate-50 flex items-center gap-2"
+          onClick={() => addToast('Exporting Full Organization List Report...', 'info')}
+          className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold shadow-xs hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export List Report</span>
@@ -260,15 +333,15 @@ export default function OrganizationManagement() {
                         <td className="py-4 px-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => alert(`✅ Approved: ${req.companyName}`)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] shadow-sm transition-all"
+                              onClick={() => handleApprove(req.id, req)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] shadow-sm transition-all cursor-pointer"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               Approve
                             </button>
                             <button
-                              onClick={() => alert(`❌ Rejected: ${req.companyName}`)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-[10px] shadow-sm transition-all"
+                              onClick={() => handleReject(req.id, req.companyName || req.name)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-[10px] shadow-sm transition-all cursor-pointer"
                             >
                               <XCircle className="w-3.5 h-3.5" />
                               Reject
@@ -421,20 +494,24 @@ export default function OrganizationManagement() {
           </div>
           )}
 
-          {/* Bottom Stats Banner (Matching Images 1-6 Bottom) */}
+          {/* Bottom Stats Banner */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">TOTAL COMPANY</span>
               <div className="flex items-baseline justify-between">
-                <h3 className="text-2xl font-black text-slate-900">{currentCompanies.length || 4}</h3>
-                <span className="text-xs font-bold text-emerald-600">+12%</span>
+                <h3 className="text-2xl font-black text-slate-900">
+                  {Object.values(companies).reduce((sum, arr) => sum + arr.length, 0)}
+                </h3>
+                <span className="text-xs font-bold text-emerald-600">Dynamic</span>
               </div>
             </div>
 
             <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ACTIVE NOW</span>
               <div className="flex items-baseline justify-between">
-                <h3 className="text-2xl font-black text-slate-900">3</h3>
+                <h3 className="text-2xl font-black text-slate-900">
+                  {Object.values(companies).reduce((sum, arr) => sum + arr.length, 0)}
+                </h3>
                 <span className="text-[10px] font-bold text-slate-400">On-duty</span>
               </div>
             </div>
@@ -519,14 +596,14 @@ export default function OrganizationManagement() {
 
               <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
                 <button
-                  onClick={() => alert('Session Terminated for Admin User!')}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md"
+                  onClick={() => addToast('Session Terminated for Admin User!', 'info')}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md cursor-pointer"
                 >
                   Session Terminate This User
                 </button>
                 <button
-                  onClick={() => alert('Changes Updated Successfully!')}
-                  className="px-6 py-2.5 rounded-xl bg-purple-900 hover:bg-purple-950 text-white font-bold text-xs shadow-md"
+                  onClick={() => addToast('Changes Updated Successfully!', 'success')}
+                  className="px-6 py-2.5 rounded-xl bg-purple-900 hover:bg-purple-950 text-white font-bold text-xs shadow-md cursor-pointer"
                 >
                   Update Changes
                 </button>
@@ -674,6 +751,9 @@ export default function OrganizationManagement() {
           </div>
         </div>
       )}
+
+      {/* Render Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
 
     </div>
   );

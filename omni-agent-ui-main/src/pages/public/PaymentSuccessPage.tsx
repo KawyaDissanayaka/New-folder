@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Download, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Download, ArrowRight } from 'lucide-react';
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
 
 export default function PaymentSuccessPage() {
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 font-sans">
       <div className="bg-white/95 backdrop-blur-2xl p-8 sm:p-12 rounded-3xl border border-indigo-100 shadow-2xl shadow-indigo-500/10 text-center flex flex-col items-center">
         
         {/* Success Icon */}
@@ -50,8 +60,8 @@ export default function PaymentSuccessPage() {
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-md">
           <button
-            onClick={() => alert('Downloading Receipt PDF...')}
-            className="w-full sm:w-1/2 py-3.5 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all"
+            onClick={() => addToast('Downloading Receipt PDF...', 'info')}
+            className="w-full sm:w-1/2 py-3.5 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-500" />
             <span>Download Receipt</span>
@@ -67,6 +77,8 @@ export default function PaymentSuccessPage() {
         </div>
 
       </div>
+
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }
