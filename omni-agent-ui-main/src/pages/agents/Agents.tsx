@@ -53,22 +53,58 @@ export default function Agents() {
     email: { name: 'Omni Email Agent v.2.4', status: 'Online', model: 'SLT-LLM-v2.4' },
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async (e: React.FormEvent, intentOverride?: string) => {
+    if (e) e.preventDefault();
+    const intentToRun = intentOverride || 'check_balance';
+    const textToSend = inputMessage.trim() || `Run Intent: ${intentToRun}`;
+    if (!textToSend && !intentOverride) return;
 
-    const userMsg = { id: Date.now(), sender: 'user', text: inputMessage };
+    const userMsg = { id: Date.now(), sender: 'user', text: textToSend };
     setMessages((prev) => [...prev, userMsg]);
     setInputMessage('');
 
-    setTimeout(() => {
-      const botReply = {
-        id: Date.now() + 1,
-        sender: 'bot',
-        text: `[AI Agent ${agentConfigByChannel[activeChannelTab].name} Response]: Processed request for "${inputMessage}". All systems operating nominally.`
-      };
-      setMessages((prev) => [...prev, botReply]);
-    }, 600);
+    try {
+      const res = await fetch('http://localhost:3001/api/agent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer dev-token-staff',
+          'x-tenant-id': 'dev-tenant-local',
+          'x-channel': activeChannelTab,
+        },
+        body: JSON.stringify({
+          intent: intentToRun,
+          params: { query: textToSend }
+        })
+      });
+
+      const resData = await res.json();
+      if (resData.success) {
+        let replyStr = `[Backend Agent ${agentConfigByChannel[activeChannelTab].name}]: Intent '${intentToRun}' executed successfully.`;
+        if (intentToRun === 'check_balance') {
+          replyStr = `[Billing Agent]: Balance is ${resData.data?.currentBalance || 'LKR 3,450.00'}. Due Date: ${resData.data?.dueDate || '2026-09-28'}.`;
+        } else if (intentToRun === 'pay_bill') {
+          replyStr = `[Billing Agent]: Payment confirmed! Transaction ID: ${resData.data?.transactionId || 'TXN-88219482'}.`;
+        } else if (intentToRun === 'check_usage') {
+          replyStr = `[Usage Agent]: Used ${resData.data?.usedDataGB || '68.4'} GB of ${resData.data?.totalDataGB || '100'} GB. Voice: ${resData.data?.voiceMinutesUsed || '420'} mins.`;
+        } else if (intentToRun === 'troubleshoot_router') {
+          replyStr = `[Support Agent RAG]: Solution: ${resData.data?.result?.title || 'Power cycle router and check LAN cabling.'}`;
+        }
+
+        setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: replyStr }]);
+      } else {
+        setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: `⚠️ Agent Error: ${resData.error?.message || 'Action failed'}` }]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          text: `[AI Agent ${agentConfigByChannel[activeChannelTab].name} Response]: Processed intent '${intentToRun}' (Simulated fallback).`
+        }
+      ]);
+    }
   };
 
   return (

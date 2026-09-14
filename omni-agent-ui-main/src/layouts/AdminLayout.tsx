@@ -13,8 +13,10 @@ import {
   Building2,
   ShieldCheck,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
+import ChatBotWidget from "../components/ChatBotWidget";
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -33,6 +35,7 @@ export default function AdminLayout() {
   // Navigation Items matching Image 1 flowchart
   const companyNavItems = [
     { name: "Dash-Board", path: "/dashboard", icon: LayoutGrid, iconBg: "#FFDBCD" },
+    { name: "Live ChatBot", path: "/chat", icon: MessageSquare, iconBg: "#C7CFFF" },
     { name: "Manage Customers", path: "/users", icon: Users, iconBg: "#C7CFFF" },
     { name: "API", path: "/api", icon: Code2, iconBg: "#C7CFFF" },
     { name: "Channels", path: "/channels", icon: SlidersHorizontal, iconBg: "#C7CFFF" },
@@ -43,6 +46,7 @@ export default function AdminLayout() {
 
   const adminNavItems = [
     { name: "Super Admin Dashboard", path: "/admin/dashboard", icon: LayoutGrid, iconBg: "#FFDBCD" },
+    { name: "Live ChatBot", path: "/admin/chat", icon: MessageSquare, iconBg: "#C7CFFF" },
     { name: "Organization Mgmt", path: "/admin/organizations", icon: Building2, iconBg: "#C7CFFF" },
     { name: "API Management", path: "/admin/api", icon: Code2, iconBg: "#C7CFFF" },
     { name: "Channels Management", path: "/admin/channels", icon: SlidersHorizontal, iconBg: "#C7CFFF" },
@@ -178,6 +182,9 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Floating ChatBot Assistant Widget */}
+      <ChatBotWidget />
     </div>
   );
 }

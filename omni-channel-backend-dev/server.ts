@@ -4,6 +4,11 @@ import fs from "fs";
 import path from "path";
 import { handleTenantRequest } from "./services/tenant-router/handler";
 
+// Enable mock authorization for local development environment
+if (process.env.NODE_ENV !== "production") {
+  process.env.ALLOW_MOCK_AUTH = "true";
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
