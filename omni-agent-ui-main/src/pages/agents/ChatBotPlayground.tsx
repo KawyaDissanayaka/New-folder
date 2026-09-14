@@ -54,8 +54,20 @@ export default function ChatBotPlayground() {
   // Check Backend Server Health
   useEffect(() => {
     const checkServer = async () => {
+      const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (!isLocalhost && !import.meta.env.VITE_API_URL) {
+        setBackendStatus("disconnected");
+        return;
+      }
+
       try {
-        const res = await fetch("http://localhost:3001/api/registrations");
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+        const res = await fetch(`${apiUrl}/api/registrations`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           setBackendStatus("connected");
         } else {
@@ -67,7 +79,7 @@ export default function ChatBotPlayground() {
     };
 
     checkServer();
-    const interval = setInterval(checkServer, 10000);
+    const interval = setInterval(checkServer, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -137,6 +149,9 @@ export default function ChatBotPlayground() {
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const response = await fetch(`${apiUrl}/api/agent`, {
         method: "POST",
         headers: {
@@ -151,7 +166,10 @@ export default function ChatBotPlayground() {
           intent: intentToRun,
           params: payloadParams,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const responseData = await response.json();
       setBackendStatus("connected");
