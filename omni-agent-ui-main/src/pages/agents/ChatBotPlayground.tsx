@@ -443,58 +443,58 @@ export default function ChatBotPlayground() {
   };
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col font-sans space-y-4">
+    <div className="min-h-[100dvh] sm:h-[calc(100vh-5rem)] flex flex-col font-sans space-y-3 p-1.5 sm:p-4 max-w-7xl mx-auto w-full">
       {/* Top Banner Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-3xl shadow-lg border border-indigo-900/40 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
-            <Bot className="w-7 h-7 text-cyan-400" />
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl shadow-lg border border-indigo-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-md shrink-0">
+            <Bot className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black tracking-tight">OmniAI ChatBot Playground</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-base sm:text-xl font-black tracking-tight truncate">OmniAI ChatBot Playground</h1>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shrink-0 ${
                   backendStatus === "connected"
                     ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                     : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                {backendStatus === "connected" ? "Backend Online (port 3001)" : "Offline Simulation Mode"}
+                {backendStatus === "connected" ? "Backend Online" : "Offline Simulation"}
               </span>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Live interface for Omni-Channel Backend Router, Specialist Agents, and RAG Support pipeline.
+            <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5">
+              Live interface for Omni-Channel Backend Router, Specialist Agents, and RAG Support.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
+            className={`px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
               showSettings
                 ? "bg-indigo-600 text-white border-indigo-500"
                 : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
             }`}
           >
-            <Sliders className="w-4 h-4" />
-            <span>API Headers & Config</span>
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Config</span>
           </button>
           <button
             onClick={() => setMessages([])}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
             title="Clear Chat History"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Config Drawer Header (Collapsible) */}
       {showSettings && (
-        <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs shrink-0">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs shrink-0">
           <div>
             <label className="font-bold text-slate-700 block mb-1">Channel (x-channel)</label>
             <select
@@ -545,7 +545,7 @@ export default function ChatBotPlayground() {
       )}
 
       {/* Main Chat Display Area */}
-      <div className="flex-1 bg-slate-100 rounded-3xl border border-slate-200/80 shadow-inner p-6 overflow-y-auto space-y-4">
+      <div className="flex-1 bg-slate-100 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-inner p-3 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -562,7 +562,7 @@ export default function ChatBotPlayground() {
             </div>
 
             <div
-              className={`max-w-[85%] sm:max-w-[70%] p-4 rounded-3xl shadow-sm text-xs ${
+              className={`max-w-[92%] sm:max-w-[75%] p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xs text-xs ${
                 msg.sender === "user"
                   ? "bg-indigo-600 text-white rounded-tr-none font-medium"
                   : "bg-white text-slate-800 rounded-tl-none border border-slate-200/80"
@@ -607,9 +607,9 @@ export default function ChatBotPlayground() {
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-3 p-4 bg-white rounded-3xl border border-slate-200/80 max-w-xs shadow-sm">
+          <div className="flex items-center gap-3 p-3.5 bg-white rounded-2xl border border-slate-200/80 max-w-xs shadow-xs">
             <RefreshCw className="w-4 h-4 text-indigo-600 animate-spin" />
-            <span className="text-xs font-semibold text-slate-600">Routing intent to specialist agent...</span>
+            <span className="text-xs font-semibold text-slate-600">Routing intent to agent...</span>
           </div>
         )}
 
@@ -617,29 +617,29 @@ export default function ChatBotPlayground() {
       </div>
 
       {/* Quick Action Intent Chips Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs space-y-2 shrink-0">
-        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 px-1">
+      <div className="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 shadow-xs space-y-2 shrink-0">
+        <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 px-1">
           <span className="flex items-center gap-1">
             <Zap className="w-3.5 h-3.5 text-amber-500" />
-            Quick Intent Actions (Backend Registered Intents)
+            Quick Intent Actions
           </span>
-          <span className="text-indigo-600 font-mono text-[10px]">Active Intent: {selectedIntent}</span>
+          <span className="text-indigo-600 font-mono text-[9px] sm:text-[10px]">Active: {selectedIntent}</span>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           <button
             onClick={() => {
               setSelectedIntent("check_balance");
               handleSend("check_balance");
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               selectedIntent === "check_balance"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
-            <span>Check Balance (check_balance)</span>
+            <span>Check Balance</span>
           </button>
 
           <button
@@ -647,14 +647,14 @@ export default function ChatBotPlayground() {
               setSelectedIntent("pay_bill");
               handleSend("pay_bill");
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               selectedIntent === "pay_bill"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Pay Monthly Bill (pay_bill)</span>
+            <span>Pay Bill</span>
           </button>
 
           <button
@@ -662,14 +662,14 @@ export default function ChatBotPlayground() {
               setSelectedIntent("check_usage");
               handleSend("check_usage");
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               selectedIntent === "check_usage"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             <BarChart2 className="w-3.5 h-3.5" />
-            <span>Data Usage (check_usage)</span>
+            <span>Data Usage</span>
           </button>
 
           <button
@@ -677,14 +677,14 @@ export default function ChatBotPlayground() {
               setSelectedIntent("troubleshoot_router");
               handleSend("troubleshoot_router");
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               selectedIntent === "troubleshoot_router"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             <Wifi className="w-3.5 h-3.5" />
-            <span>Troubleshoot Wi-Fi (troubleshoot_router)</span>
+            <span>Troubleshoot Wi-Fi</span>
           </button>
         </div>
       </div>
@@ -695,24 +695,24 @@ export default function ChatBotPlayground() {
           e.preventDefault();
           handleSend();
         }}
-        className="bg-white p-3 rounded-2xl border border-slate-200 shadow-md flex items-center gap-3 shrink-0"
+        className="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 shadow-md flex items-center gap-2 sm:gap-3 shrink-0"
       >
         <div className="relative flex-1">
           <input
             type="text"
-            placeholder="Type custom text query or message for chatbot agent..."
+            placeholder="Type query or message..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3.5 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-all"
+          className="px-4 sm:px-6 py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition-all shrink-0"
         >
-          <span>Send Query</span>
+          <span className="hidden sm:inline">Send Query</span>
           <Send className="w-4 h-4" />
         </button>
       </form>
