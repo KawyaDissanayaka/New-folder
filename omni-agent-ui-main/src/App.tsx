@@ -46,6 +46,8 @@ import Channels from "@/pages/channels/Channels";
 import Agents from "@/pages/agents/Agents";
 import Notifications from "@/pages/notifications/Notifications";
 import ChatBotPlayground from "@/pages/agents/ChatBotPlayground";
+import LiveAgentConsole from "@/pages/agent/LiveAgentConsole";
+import HostedChatWidget from "@/pages/public/HostedChatWidget";
 
 // Dashboard Pages (Super Admin Workplace)
 import SuperAdminDashboard from "@/pages/superadmin/SuperAdminDashboard";
@@ -88,6 +90,7 @@ function App() {
         {/* Top-Level Direct Access ChatBot Routes */}
         <Route path="/chat" element={<ChatBotPlayground />} />
         <Route path="/chatbot" element={<ChatBotPlayground />} />
+        <Route path="/chat/:companySlug/:agentSlug" element={<HostedChatWidget />} />
 
         {/* Company Onboarding Setup Screens */}
         <Route path="/onboarding/plan" element={<CompanyOnboardingPlanPage />} />
@@ -107,6 +110,8 @@ function App() {
           <Route element={<AdminLayout />}>
             {/* Company Workplace */}
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/agent/console" element={<LiveAgentConsole />} />
+            <Route path="/live-agent" element={<LiveAgentConsole />} />
             <Route path="/chat" element={<ChatBotPlayground />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/settings" element={<Settings />} />

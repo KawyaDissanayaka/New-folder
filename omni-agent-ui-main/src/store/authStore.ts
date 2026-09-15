@@ -21,7 +21,7 @@ try {
 }
 
 if (!savedUser) {
-  savedUser = { id: 'user-1', name: 'System Super Admin', email: 'superadmin@slt.lk', role: 'superadmin' };
+  savedUser = { id: 'user-1', name: 'System Admin', email: 'admin@slt.lk', role: 'admin', tenantId: 'slt', 'custom:tenant_id': 'slt' };
 }
 
 const savedToken = (typeof window !== 'undefined' && localStorage.getItem('omni_token')) || 'token-user-1';

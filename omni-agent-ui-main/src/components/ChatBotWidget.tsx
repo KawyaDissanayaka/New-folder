@@ -23,6 +23,8 @@ interface Message {
   error?: any;
 }
 
+import { apiClient } from "@/api/apiClient";
+
 export default function ChatBotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -61,24 +63,11 @@ export default function ChatBotWidget() {
 
     const targetIntent = intentToRun || "check_balance";
 
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
-
     try {
-      const response = await fetch(`${apiUrl}/api/agent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer dev-token-staff",
-          "x-tenant-id": "dev-tenant-local",
-          "x-channel": "web",
-        },
-        body: JSON.stringify({
-          intent: targetIntent,
-          params: { query: textToSend },
-        }),
+      const resData = await apiClient.post('/api/agent', {
+        intent: targetIntent,
+        params: { query: textToSend },
       });
-
-      const resData = await response.json();
       if (resData.success) {
         let replyText = "Action completed successfully.";
         if (targetIntent === "check_balance") {
