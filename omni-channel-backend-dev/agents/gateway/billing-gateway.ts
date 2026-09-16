@@ -23,6 +23,19 @@ export const handler = async (
     };
   }
 
+  if (event.action === "pay_bill") {
+    return {
+      success: true,
+      data: {
+        transactionId: "TXN-" + Math.floor(10000000 + Math.random() * 90000000),
+        amountPaid: "LKR 4,500.00",
+        paymentStatus: "CONFIRMED",
+        accountNumber: "SLT-9982-555",
+        message: "Payment processed successfully.",
+      },
+    };
+  }
+
   return {
     success: false,
     error: {

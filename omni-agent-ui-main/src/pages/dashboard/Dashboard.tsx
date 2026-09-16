@@ -346,19 +346,31 @@ export default function Dashboard() {
               Active Channels
             </p>
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-green-50 px-2 py-1 rounded-md">
+              <div
+                onClick={() => navigate('/admin/channels?channel=whatsapp')}
+                className="flex items-center gap-1.5 bg-green-50 hover:bg-green-100 px-2 py-1 rounded-md cursor-pointer transition-all"
+                title="Manage WhatsApp Gateway"
+              >
                 <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4" />
                 <span className="text-xs font-medium text-green-700">
                   WhatsApp
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-md">
+              <div
+                onClick={() => navigate('/admin/channels?channel=messenger')}
+                className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md cursor-pointer transition-all"
+                title="Manage Messenger Gateway"
+              >
                 <img src={messengerIcon} alt="Messenger" className="w-4 h-4" />
                 <span className="text-xs font-medium text-blue-700">
                   Messenger
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 bg-purple-50 px-2 py-1 rounded-md">
+              <div
+                onClick={() => navigate('/admin/channels?channel=sms')}
+                className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-md cursor-pointer transition-all"
+                title="Manage SMS Gateway"
+              >
                 <img src={smsIcon} alt="SMS" className="w-4 h-4" />
                 <span className="text-xs font-medium text-purple-700">SMS</span>
               </div>

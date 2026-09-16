@@ -9,5 +9,17 @@
       "createdAt": "2026-09-12T03:53:36.306Z"
     }
   ],
-  "registrations": []
+  "registrations": [],
+  "agents": [],
+  "channels": [],
+  "packages": [],
+  "presence": {},
+  "messages": [],
+  "channelsConfig": {
+    "whatsapp": {
+      "channelId": "whatsapp",
+      "accountSid": "ACC-9821",
+      "updatedAt": "2026-09-16T04:59:33.935Z"
+    }
+  }
 }

@@ -28,7 +28,7 @@ export const handler = async (
 
   // 2. Format the request for the Agent Gateway
   const gatewayRequest: AgentActionRequest = {
-    action: "check_balance", // In a dynamic system, this could be passed in from the Main Agent
+    action: params._intent || params.action || "check_balance",
     tenantId: context.tenantId,
     userId: context.userId,
     params: params,

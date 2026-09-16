@@ -150,31 +150,71 @@ export default function SuperAdminDashboard() {
 
       {/* Channels Bar */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Active Gateway Channels</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Active Gateway Channels</h3>
+          <span className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer" onClick={() => navigate('/admin/channels')}>
+            Manage All Channels &rarr;
+          </span>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
+          <div
+            onClick={() => navigate('/admin/channels?channel=whatsapp')}
+            className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center gap-3 cursor-pointer hover:bg-emerald-100/80 hover:scale-102 transition-all shadow-xs"
+            title="Configure WhatsApp Channel"
+          >
             <MessageSquare className="w-5 h-5 text-emerald-600" />
-            <span className="text-xs font-bold text-emerald-900">WhatsApp</span>
+            <div>
+              <span className="text-xs font-black text-emerald-900 block">WhatsApp</span>
+              <span className="text-[9px] font-bold text-emerald-600">● Operational</span>
+            </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-3">
+          <div
+            onClick={() => navigate('/admin/channels?channel=messenger')}
+            className="p-3 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-3 cursor-pointer hover:bg-blue-100/80 hover:scale-102 transition-all shadow-xs"
+            title="Configure Messenger Channel"
+          >
             <MessageSquare className="w-5 h-5 text-blue-600" />
-            <span className="text-xs font-bold text-blue-900">Messenger</span>
+            <div>
+              <span className="text-xs font-black text-blue-900 block">Messenger</span>
+              <span className="text-[9px] font-bold text-blue-600">● Connected</span>
+            </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center gap-3">
+          <div
+            onClick={() => navigate('/admin/channels?channel=web')}
+            className="p-3 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center gap-3 cursor-pointer hover:bg-cyan-100/80 hover:scale-102 transition-all shadow-xs"
+            title="Configure Web Channel"
+          >
             <Globe className="w-5 h-5 text-cyan-600" />
-            <span className="text-xs font-bold text-cyan-900">Web</span>
+            <div>
+              <span className="text-xs font-black text-cyan-900 block">Web</span>
+              <span className="text-[9px] font-bold text-cyan-600">● Active</span>
+            </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-red-50 border border-red-100 flex items-center gap-3">
+          <div
+            onClick={() => navigate('/admin/channels?channel=email')}
+            className="p-3 rounded-2xl bg-red-50 border border-red-100 flex items-center gap-3 cursor-pointer hover:bg-red-100/80 hover:scale-102 transition-all shadow-xs"
+            title="Configure Email Channel"
+          >
             <Mail className="w-5 h-5 text-red-600" />
-            <span className="text-xs font-bold text-red-900">Email</span>
+            <div>
+              <span className="text-xs font-black text-red-900 block">Email</span>
+              <span className="text-[9px] font-bold text-red-600">▲ Healthy</span>
+            </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center gap-3">
+          <div
+            onClick={() => navigate('/admin/channels?channel=sms')}
+            className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center gap-3 cursor-pointer hover:bg-indigo-100/80 hover:scale-102 transition-all shadow-xs"
+            title="Configure SMS Channel"
+          >
             <Smartphone className="w-5 h-5 text-indigo-600" />
-            <span className="text-xs font-bold text-indigo-900">SMS</span>
+            <div>
+              <span className="text-xs font-black text-indigo-900 block">SMS</span>
+              <span className="text-[9px] font-bold text-indigo-600">● Online</span>
+            </div>
           </div>
         </div>
       </div>

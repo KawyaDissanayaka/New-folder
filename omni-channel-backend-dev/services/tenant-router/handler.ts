@@ -95,7 +95,7 @@ export async function handleTenantRequest(request: HttpRequestPayload): Promise<
     return await mainAgentHandler({
       context: routerResult.data.tenantContext,
       intent: cleanIntent,
-      params: params,
+      params: { ...params, _intent: cleanIntent },
     });
   }
 

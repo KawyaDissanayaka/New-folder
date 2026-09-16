@@ -78,7 +78,7 @@ export function decodeMockAzureJwt(authorizationHeader?: string): Partial<Tenant
     return {
       userId: "dev-user-001",
       role: "staff",
-      permissions: ["billing:read", "usage:read", "faults:read"],
+      permissions: ["billing:read", "billing:purchase", "usage:read", "faults:read", "faults:create"],
     };
   }
 
