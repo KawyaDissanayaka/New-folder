@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Bot, Mail, Building2, Globe, User, Layers, Cpu, ArrowRight, Phone, Lock, MapPin, FileText, ChevronRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Mail, Building2, Globe, User, Layers, Cpu, ArrowRight, Phone, Lock, MapPin, FileText, ChevronRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import ToastContainer, { type ToastMessage } from '@/components/Toast';
 
 // ⭐ Defined OUTSIDE Register — prevents remounting on every keystroke
@@ -157,11 +157,13 @@ export default function Register() {
         {/* Left Panel */}
         <div className="md:col-span-4 bg-gradient-to-b from-indigo-950 via-slate-950 to-indigo-950 p-8 flex flex-col justify-between border-r border-indigo-900/40">
           <div className="flex flex-col items-center text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 p-[2px] shadow-lg shadow-indigo-500/30">
-              <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center">
-                <Bot className="w-7 h-7 text-cyan-400" />
-              </div>
+            {/* Logos badge */}
+            <div className="flex items-center justify-center gap-2 p-2 bg-white/95 rounded-2xl shadow-lg max-w-[200px]">
+              <img src="/slt-mobitel-logo.jpg" alt="SLT Mobitel" className="h-5 object-contain max-w-[80px]" />
+              <div className="w-px h-4 bg-slate-300" />
+              <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="h-5 object-contain max-w-[80px]" />
             </div>
+
             <div>
               <h2 className="text-lg font-extrabold text-white tracking-tight">OmniAI Platform</h2>
               <p className="text-[11px] text-indigo-300 font-medium mt-1">SLT Digital Lab</p>

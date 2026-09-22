@@ -115,6 +115,13 @@ export default function LoginAdmin() {
           <span className="font-extrabold text-lg tracking-tight">OmniAI <span className="text-xs text-purple-400 font-bold">SUPER ADMIN</span></span>
         </Link>
 
+        {/* Co-Branding Badge */}
+        <div className="hidden sm:flex items-center gap-3 bg-white/95 backdrop-blur-md p-1.5 px-3 rounded-2xl shadow-md border border-white/40">
+          <img src="/slt-mobitel-logo.jpg" alt="SLT Mobitel" className="h-6 object-contain" />
+          <div className="w-px h-4 bg-slate-300" />
+          <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="h-6 object-contain" />
+        </div>
+
         <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
           <Link to="/" className="hover:text-white">Home</Link>
           <Link to="/terms" className="hover:text-white">Terms &amp; Conditions</Link>

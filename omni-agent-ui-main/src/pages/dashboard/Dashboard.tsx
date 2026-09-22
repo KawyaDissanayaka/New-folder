@@ -24,10 +24,10 @@ import {
   Cell,
 } from "recharts";
 
-// Fixed paths to go up two folders
 import whatsappIcon from "../../assets/whatsapp.svg";
 import messengerIcon from "../../assets/messenger.svg";
 import smsIcon from "../../assets/sms.svg";
+import { apiClient } from "@/api/apiClient";
 
 // Mock Data for the Line Chart
 const growthData = [
@@ -86,8 +86,6 @@ const activityLogs = [
   },
 ];
 
-import { apiClient } from "@/api/apiClient";
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const [metrics, setMetrics] = React.useState<any>({
@@ -113,14 +111,14 @@ export default function Dashboard() {
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      {/* Top Gradient Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white p-6 rounded-3xl border border-indigo-500/20 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+      {/* Top Executive Header Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
         <div>
-          <div className="flex items-center gap-2 mb-1 text-cyan-400">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Company Workspace Analytics</span>
+          <div className="flex items-center gap-2 mb-1.5 text-indigo-300">
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span className="text-xs font-extrabold uppercase tracking-widest text-cyan-400">Company Workspace Analytics</span>
           </div>
-          <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-cyan-200">
+          <h1 className="text-2xl font-black text-white tracking-tight">
             Analytics Overview
           </h1>
           <p className="text-xs text-slate-300 mt-1">Real-time user growth, active channels, and security metrics.</p>
@@ -128,18 +126,18 @@ export default function Dashboard() {
 
         <div className="flex flex-wrap items-center gap-4">
           {/* Connection Status Pill */}
-          <div className="py-2 px-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 shadow-sm backdrop-blur-md">
-            <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></span>
-            Connection: Active & Optimal
+          <div className="py-2 px-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2 shadow-2xs">
+            <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+            Connection: Active &amp; Optimal
           </div>
 
           {/* Date & Export Buttons */}
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 h-10 px-4 border border-indigo-500/30 bg-slate-900/80 rounded-xl text-xs font-bold text-slate-200 hover:bg-slate-800 transition-all cursor-pointer">
-              <Calendar size={14} className="text-cyan-400" />
+            <button className="flex items-center gap-2 h-10 px-4 border border-slate-200 bg-slate-50 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all cursor-pointer">
+              <Calendar size={14} className="text-indigo-600" />
               Last 30 Days
             </button>
-            <button className="flex items-center gap-2 h-10 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-xs font-bold text-white shadow-md transition-all cursor-pointer">
+            <button className="flex items-center gap-2 h-10 px-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-xs font-bold text-white shadow-sm transition-all cursor-pointer">
               <Download size={14} />
               Export Report
             </button>
@@ -154,78 +152,78 @@ export default function Dashboard() {
           {/* Stat Cards Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 shrink-0">
             {/* Card 1 */}
-            <div className="bg-slate-900/80 backdrop-blur-md p-5 rounded-3xl border border-indigo-500/20 shadow-xl hover:border-indigo-400/40 transition-all">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1">Total Users</p>
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">
+                  <h2 className="text-2xl font-black text-slate-900">
                     {metrics.totalUsers || "1,429,203"}
                   </h2>
                 </div>
-                <div className="p-3 bg-indigo-500/10 rounded-2xl text-cyan-400 border border-indigo-500/20">
+                <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600 border border-indigo-100">
                   <Users size={20} />
                 </div>
               </div>
-              <p className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+              <p className="text-xs text-emerald-600 font-bold flex items-center gap-1">
                 <TrendingUp size={12} /> +12% Increase
               </p>
             </div>
 
             {/* Card 2 */}
-            <div className="bg-slate-900/80 backdrop-blur-md p-5 rounded-3xl border border-indigo-500/20 shadow-xl hover:border-indigo-400/40 transition-all">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1">
                     Active Connections
                   </p>
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                  <h2 className="text-2xl font-black text-slate-900">
                     {metrics.activeConnections || "842,091"}
                   </h2>
                 </div>
-                <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-400 border border-purple-500/20">
+                <div className="p-3 bg-purple-50 rounded-2xl text-purple-600 border border-purple-100">
                   <Activity size={20} />
                 </div>
               </div>
-              <p className="text-xs text-slate-400 font-medium">Stable</p>
+              <p className="text-xs text-slate-500 font-medium">Stable</p>
             </div>
 
             {/* Card 3 */}
-            <div className="bg-slate-900/80 backdrop-blur-md p-5 rounded-3xl border border-indigo-500/20 shadow-xl hover:border-indigo-400/40 transition-all">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1">Pending Reg.</p>
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">1,244</h2>
+                  <h2 className="text-2xl font-black text-slate-900">1,244</h2>
                 </div>
-                <div className="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 border border-cyan-500/20">
+                <div className="p-3 bg-cyan-50 rounded-2xl text-cyan-600 border border-cyan-100">
                   <UserPlus size={20} />
                 </div>
               </div>
-              <p className="text-xs text-slate-400 font-medium">2.4h avg wait</p>
+              <p className="text-xs text-slate-500 font-medium">2.4h avg wait</p>
             </div>
           </div>
 
           {/* Recent Activity Log */}
-          <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-indigo-500/20 shadow-xl flex flex-col flex-1 min-h-0">
-            <h3 className="text-xs font-extrabold text-cyan-400 uppercase tracking-wider mb-4 shrink-0">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col flex-1 min-h-0">
+            <h3 className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider mb-4 shrink-0">
               Recent Activity Log
             </h3>
             <div className="space-y-4 overflow-y-auto pr-2 no-scrollbar">
               {activityLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-center justify-between border-b border-indigo-500/10 pb-3 last:border-0 last:pb-0"
+                  className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0 last:pb-0"
                 >
                   <div className="flex items-center gap-3">
                     <span
                       className={`w-2.5 h-2.5 rounded-full ${
                         log.status === "Success"
-                          ? "bg-emerald-400 shadow-sm shadow-emerald-400/50"
+                          ? "bg-emerald-500"
                           : log.status === "Warning"
-                            ? "bg-amber-400 shadow-sm shadow-amber-400/50"
-                            : "bg-cyan-400 shadow-sm shadow-cyan-400/50"
+                            ? "bg-amber-500"
+                            : "bg-indigo-500"
                       }`}
                     ></span>
-                    <p className="text-xs font-bold text-slate-200">
+                    <p className="text-xs font-bold text-slate-800">
                       {log.action}
                     </p>
                   </div>
@@ -241,12 +239,12 @@ export default function Dashboard() {
         {/* Right Column (Pie Chart + Line Chart + Channels) */}
         <div className="flex flex-col gap-6 min-h-0">
           {/* Channel Distribution Pie Chart */}
-          <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-indigo-500/20 shadow-xl shrink-0">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm shrink-0">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-xs font-extrabold text-cyan-400 uppercase tracking-wider">
+              <h3 className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider">
                 Channel Distribution
               </h3>
-              <span className="text-xs font-bold text-indigo-300">
+              <span className="text-xs font-bold text-slate-500">
                 Total: 12.4k
               </span>
             </div>
@@ -268,12 +266,13 @@ export default function Dashboard() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0f172a",
+                      backgroundColor: "#ffffff",
                       borderRadius: "12px",
-                      border: "1px solid rgba(99, 102, 241, 0.3)",
-                      color: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      color: "#0f172a",
                       fontSize: "12px",
                       fontWeight: "bold",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
                     }}
                   />
                 </PieChart>
@@ -290,8 +289,8 @@ export default function Dashboard() {
                     className="w-2.5 h-2.5 rounded-full"
                     style={{ backgroundColor: chan.color }}
                   ></span>
-                  <span className="text-slate-300 font-medium">{chan.name}</span>
-                  <span className="text-white ml-auto font-black">
+                  <span className="text-slate-600 font-medium">{chan.name}</span>
+                  <span className="text-slate-900 ml-auto font-black">
                     {chan.value}%
                   </span>
                 </div>
@@ -300,8 +299,8 @@ export default function Dashboard() {
           </div>
 
           {/* User Growth Trends Line Chart */}
-          <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-indigo-500/20 shadow-xl flex flex-col flex-1 min-h-0">
-            <h3 className="text-xs font-extrabold text-cyan-400 uppercase tracking-wider mb-4 shrink-0">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col flex-1 min-h-0">
+            <h3 className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider mb-4 shrink-0">
               User Growth Trends
             </h3>
             <div className="flex-1 w-full min-h-0">
@@ -312,7 +311,7 @@ export default function Dashboard() {
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="rgba(99, 102, 241, 0.15)"
+                    stroke="#f1f5f9"
                     vertical={false}
                   />
                   <XAxis
@@ -325,25 +324,26 @@ export default function Dashboard() {
                   <YAxis hide={true} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0f172a",
+                      backgroundColor: "#ffffff",
                       borderRadius: "12px",
-                      border: "1px solid rgba(99, 102, 241, 0.3)",
-                      color: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      color: "#0f172a",
                       fontSize: "12px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: "11px", fontWeight: "bold", color: "#cbd5e1" }} />
+                  <Legend wrapperStyle={{ fontSize: "11px", fontWeight: "bold", color: "#64748b" }} />
                   <Line
                     type="monotone"
                     dataKey="direct"
-                    stroke="#38bdf8"
+                    stroke="#2563eb"
                     strokeWidth={3}
                     dot={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="partners"
-                    stroke="#34d399"
+                    stroke="#10b981"
                     strokeWidth={3}
                     strokeDasharray="5 3"
                     dot={false}
@@ -354,38 +354,38 @@ export default function Dashboard() {
           </div>
 
           {/* Channels Box */}
-          <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 rounded-3xl p-4 flex flex-col justify-center shrink-0 shadow-lg">
-            <p className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider mb-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-3xl p-4 flex flex-col justify-center shrink-0 shadow-2xs">
+            <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
               Active Gateway Channels
             </p>
             <div className="flex items-center gap-2 flex-wrap">
               <div
                 onClick={() => navigate('/admin/channels?channel=whatsapp')}
-                className="flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-emerald-500/30 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all"
+                className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-500 hover:shadow-xs transition-all"
                 title="Manage WhatsApp Gateway"
               >
                 <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4" />
-                <span className="text-xs font-bold text-emerald-300">
+                <span className="text-xs font-bold text-emerald-600">
                   WhatsApp
                 </span>
               </div>
               <div
                 onClick={() => navigate('/admin/channels?channel=messenger')}
-                className="flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-blue-500/30 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all"
+                className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer hover:border-blue-500 hover:shadow-xs transition-all"
                 title="Manage Messenger Gateway"
               >
                 <img src={messengerIcon} alt="Messenger" className="w-4 h-4" />
-                <span className="text-xs font-bold text-blue-300">
+                <span className="text-xs font-bold text-blue-600">
                   Messenger
                 </span>
               </div>
               <div
                 onClick={() => navigate('/admin/channels?channel=sms')}
-                className="flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-purple-500/30 cursor-pointer hover:border-purple-400 hover:shadow-md transition-all"
+                className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer hover:border-purple-500 hover:shadow-xs transition-all"
                 title="Manage SMS Gateway"
               >
                 <img src={smsIcon} alt="SMS" className="w-4 h-4" />
-                <span className="text-xs font-bold text-purple-300">SMS</span>
+                <span className="text-xs font-bold text-purple-600">SMS</span>
               </div>
             </div>
           </div>

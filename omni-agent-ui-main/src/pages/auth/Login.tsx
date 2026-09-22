@@ -89,21 +89,23 @@ export default function Login() {
       </div>
 
       {/* Top Navbar Header */}
-      <header className="relative z-10 max-w-7xl mx-auto w-full flex items-center justify-between py-2 px-4">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 p-0.5 shadow-md">
-            <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
-              <Bot className="w-5 h-5 text-cyan-400" />
-            </div>
-          </div>
-          <span className="text-xl font-black text-white">OmniAI</span>
+      <header className="relative z-10 max-w-7xl mx-auto w-full flex items-center justify-between py-3 px-6">
+        <Link to="/" className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/40 shadow-sm">
+          <img src="/slt-mobitel-logo.jpg" alt="SLT-Mobitel" className="h-7 object-contain" />
+          <div className="w-px h-5 bg-slate-300" />
+          <span className="text-lg font-black text-slate-900">OmniAI</span>
         </Link>
+
+        {/* Innovation Partner Badge in Login Top Header */}
+        <div className="hidden sm:flex items-center gap-2.5 bg-white/90 backdrop-blur-md py-1.5 px-3.5 rounded-2xl shadow-sm border border-white/40">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Partner</span>
+          <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="h-6 object-contain" />
+        </div>
 
         <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
           <Link to="/" className="hover:text-white transition-colors">Home</Link>
-          <Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link>
+          <Link to="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
           <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-          <Link to="/about" className="hover:text-white transition-colors">About</Link>
           <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
           <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
         </div>
@@ -112,20 +114,20 @@ export default function Login() {
       {/* Main Container Card */}
       <div className="relative z-10 max-w-5xl w-full mx-auto my-auto bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-indigo-900/50 shadow-2xl shadow-indigo-950/80 overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[580px]">
         
-        {/* Left Side Visual Promo Section (Matching Figma) */}
+        {/* Left Side Visual Promo Section */}
         <div className="md:col-span-5 bg-gradient-to-b from-indigo-950/90 via-slate-950 to-indigo-950 p-8 flex flex-col justify-between border-r border-indigo-900/40 relative">
           
           <div className="flex flex-col items-center text-center space-y-4 pt-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 p-1 shadow-lg shadow-indigo-500/30">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 p-[2px] shadow-lg shadow-indigo-500/30">
               <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center">
-                <Bot className="w-8 h-8 text-cyan-400" />
+                <Bot className="w-7 h-7 text-cyan-400" />
               </div>
             </div>
 
             <div>
               <h2 className="text-xl font-extrabold text-white tracking-tight">Empower Your Workspace</h2>
               <p className="text-xs text-indigo-300 font-semibold mt-1">
-                SLT Digital Lab Omni Channel AI Platform
+                SLT Digital Lab &amp; Embryo Innovation Platform
               </p>
             </div>
           </div>
