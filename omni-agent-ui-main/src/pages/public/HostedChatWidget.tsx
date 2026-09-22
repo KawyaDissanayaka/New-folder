@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react';
+import { useParams } from 'react-router-dom';
 import { Bot, Send, User, Headset, CheckCircle2, ShieldCheck, RefreshCw, AlertCircle, FileText } from 'lucide-react';
 import { apiClient } from '@/api/apiClient';
 

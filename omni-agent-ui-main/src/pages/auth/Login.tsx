@@ -4,7 +4,7 @@ import InputField from '@/components/InputField';
 import Button from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import { apiClient } from '@/api/apiClient';
-import { Bot, Mail, Lock, Building2, Layers, Cpu, Shield } from 'lucide-react';
+import { Bot, Mail, Lock, Building2, Layers, Cpu } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -80,172 +80,153 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-between p-4 sm:p-6 md:p-10 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-mesh flex flex-col justify-between p-4 sm:p-6 md:p-10 font-sans relative overflow-hidden">
       
-      {/* Dynamic Background Glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl" />
-      </div>
-
       {/* Top Navbar Header */}
       <header className="relative z-10 max-w-7xl mx-auto w-full flex items-center justify-between py-3 px-6">
-        <Link to="/" className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/40 shadow-sm">
-          <img src="/slt-mobitel-logo.jpg" alt="SLT-Mobitel" className="h-7 object-contain" />
-          <div className="w-px h-5 bg-slate-300" />
-          <span className="text-lg font-black text-slate-900">OmniAI</span>
+        <Link to="/" className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="w-10 h-8 overflow-hidden flex items-center justify-center rounded-lg bg-white">
+            <img src="/slt-mobitel-logo.jpg" alt="SLT-Mobitel" className="w-full h-full object-cover scale-[1.5]" />
+          </div>
+          <div className="w-px h-5 bg-slate-200" />
+          <span className="text-base font-black text-slate-900">OmniAI</span>
         </Link>
 
         {/* Innovation Partner Badge in Login Top Header */}
-        <div className="hidden sm:flex items-center gap-2.5 bg-white/90 backdrop-blur-md py-1.5 px-3.5 rounded-2xl shadow-sm border border-white/40">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Partner</span>
-          <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="h-6 object-contain" />
+        <div className="hidden sm:flex items-center gap-2.5 bg-white py-1.5 px-3.5 rounded-2xl shadow-sm border border-slate-200">
+          <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Partnered with</span>
+          <div className="w-px h-4 bg-slate-200" />
+          <div className="h-6 w-20 overflow-hidden flex items-center justify-center">
+            <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="w-full h-full object-contain scale-[1.2]" />
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
-          <Link to="/" className="hover:text-white transition-colors">Home</Link>
-          <Link to="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
-          <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-          <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-          <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
+        <div className="flex items-center gap-4 text-xs font-bold text-slate-600">
+          <Link to="/" className="hover:text-indigo-600 transition-colors">Home</Link>
+          <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms</Link>
+          <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacy</Link>
+          <Link to="/pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
+          <Link to="/contact" className="hover:text-indigo-600 transition-colors">Contact</Link>
         </div>
       </header>
 
       {/* Main Container Card */}
-      <div className="relative z-10 max-w-5xl w-full mx-auto my-auto bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-indigo-900/50 shadow-2xl shadow-indigo-950/80 overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[580px]">
+      <div className="relative z-10 max-w-5xl w-full mx-auto my-auto bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[580px]">
         
         {/* Left Side Visual Promo Section */}
-        <div className="md:col-span-5 bg-gradient-to-b from-indigo-950/90 via-slate-950 to-indigo-950 p-8 flex flex-col justify-between border-r border-indigo-900/40 relative">
+        <div className="md:col-span-5 bg-indigo-600 text-white p-8 flex flex-col justify-between relative">
           
           <div className="flex flex-col items-center text-center space-y-4 pt-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 p-[2px] shadow-lg shadow-indigo-500/30">
-              <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center">
-                <Bot className="w-7 h-7 text-cyan-400" />
-              </div>
+            <div className="w-16 h-16 rounded-2xl bg-white/20 p-2 shadow-inner flex items-center justify-center backdrop-blur-md">
+              <Bot className="w-9 h-9 text-white" />
             </div>
 
             <div>
-              <h2 className="text-xl font-extrabold text-white tracking-tight">Empower Your Workspace</h2>
-              <p className="text-xs text-indigo-300 font-semibold mt-1">
+              <h2 className="text-xl font-black text-white tracking-tight">Empower Your Workspace</h2>
+              <p className="text-xs text-indigo-100 font-medium mt-1">
                 SLT Digital Lab &amp; Embryo Innovation Platform
               </p>
             </div>
           </div>
 
-          {/* 3 Interactive Feature Pills matching Figma left side list */}
+          {/* 3 Feature Pills */}
           <div className="space-y-3 my-6">
-            <div className="bg-indigo-900/40 border border-indigo-700/50 p-3.5 rounded-2xl flex items-center gap-3">
-              <Building2 className="w-5 h-5 text-cyan-400 shrink-0" />
+            <div className="bg-white/10 border border-white/20 p-3.5 rounded-2xl flex items-center gap-3 backdrop-blur-sm">
+              <Building2 className="w-5 h-5 text-indigo-200 shrink-0" />
               <div>
-                <h4 className="text-xs font-bold text-white">Own Workspace</h4>
-                <p className="text-[11px] text-slate-300">Manage your own organization workspace, add customers, and manage users.</p>
+                <h4 className="text-xs font-black text-white">Own Workspace</h4>
+                <p className="text-[10px] text-indigo-100 font-medium">Multi-tenant isolation for companies.</p>
               </div>
             </div>
 
-            <div className="bg-indigo-900/40 border border-indigo-700/50 p-3.5 rounded-2xl flex items-center gap-3">
-              <Layers className="w-5 h-5 text-purple-400 shrink-0" />
+            <div className="bg-white/10 border border-white/20 p-3.5 rounded-2xl flex items-center gap-3 backdrop-blur-sm">
+              <Layers className="w-5 h-5 text-indigo-200 shrink-0" />
               <div>
-                <h4 className="text-xs font-bold text-white">Omni Channels</h4>
-                <p className="text-[11px] text-slate-300">Connect with customers through WhatsApp, Messenger, Email, and Web channels.</p>
+                <h4 className="text-xs font-black text-white">Custom Knowledge Data</h4>
+                <p className="text-[10px] text-indigo-100 font-medium">Train custom LLMs on your files &amp; URLs.</p>
               </div>
             </div>
 
-            <div className="bg-indigo-900/40 border border-indigo-700/50 p-3.5 rounded-2xl flex items-center gap-3">
-              <Cpu className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div className="bg-white/10 border border-white/20 p-3.5 rounded-2xl flex items-center gap-3 backdrop-blur-sm">
+              <Cpu className="w-5 h-5 text-indigo-200 shrink-0" />
               <div>
-                <h4 className="text-xs font-bold text-white">AI Agent Support</h4>
-                <p className="text-[11px] text-slate-300">Deploy your own AI Agent to connect with customers through Omni Channels.</p>
+                <h4 className="text-xs font-black text-white">Multi-Channel Routing</h4>
+                <p className="text-[10px] text-indigo-100 font-medium">WhatsApp, Messenger, Web &amp; SMS.</p>
               </div>
             </div>
           </div>
 
-          <div className="text-center text-[11px] text-slate-400">
-            Powered by SLT Digital Lab Omni Platform
+          {/* Bottom Security Footer */}
+          <div className="pt-4 border-t border-white/20 text-center">
+            <p className="text-[10px] text-indigo-100 font-medium">
+              Protected by Enterprise ISO Security Standard
+            </p>
           </div>
         </div>
 
-        {/* Right Side Form Section (Matching Figma Login Page) */}
-        <div className="md:col-span-7 bg-white p-8 sm:p-10 flex flex-col justify-between">
-          <div>
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                Welcome to Omni Channel Agent
-              </h2>
-              <p className="text-xs text-slate-500 mt-1 font-normal">
-                Sign in with your company work email to access your workspace
+        {/* Right Side Form Section */}
+        <div className="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center bg-white text-slate-900">
+          <div className="max-w-md mx-auto w-full space-y-6">
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sign In to Workspace</h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Enter your company work credentials to access your Omni AI Agent dashboard.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <InputField
-                label="Work Email"
-                type="email"
-                placeholder="admin@company.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                error={errors.email}
-                icon={<Mail className="w-4 h-4 text-slate-400" />}
-              />
-
-              <InputField
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                error={errors.password}
-                icon={<Lock className="w-4 h-4 text-slate-400" />}
-              />
-
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  isLoading={isLoading}
-                  className="rounded-xl py-3 font-bold text-xs bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20"
-                >
-                  SIGN IN
-                </Button>
+              <div>
+                <InputField
+                  label="Work Email *"
+                  type="email"
+                  placeholder="admin@slt.lk"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  error={errors.email}
+                  icon={<Mail className="w-4 h-4" />}
+                  required
+                />
               </div>
+
+              <div>
+                <InputField
+                  label="Password *"
+                  type="password"
+                  placeholder="••••••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  error={errors.password}
+                  icon={<Lock className="w-4 h-4" />}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                isLoading={isLoading}
+                className="w-full py-3.5 rounded-2xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all cursor-pointer mt-2"
+              >
+                Sign In to Workspace
+              </Button>
             </form>
 
-            {/* Divider */}
-            <div className="relative flex items-center justify-center my-6">
-              <div className="border-t border-slate-200 w-full" />
-              <span className="bg-white px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0">
-                OR
-              </span>
-            </div>
-
-            {/* Super Admin Login Action Button (Matching Figma) */}
-            <Link
-              to="/login-admin"
-              className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs text-center flex items-center justify-center gap-2 shadow-md transition-all"
-            >
-              <Shield className="w-4 h-4 text-cyan-400" />
-              <span>SUPER ADMIN LOGIN</span>
-            </Link>
-
-            {/* New Company Registration Link */}
-            <div className="mt-6 text-center text-xs font-semibold text-slate-600">
-              New company?{' '}
+            <div className="pt-4 text-center text-xs text-slate-500 font-medium border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <span>Don't have a workspace account?</span>
               <Link to="/register" className="text-indigo-600 hover:underline font-bold">
-                Register your company
+                Register Company WorkSpace &rarr;
               </Link>
             </div>
-          </div>
-
-          <div className="pt-4 text-center text-[11px] text-slate-400 border-t border-slate-100">
-            Privacy Policy • Terms of Service • Support • © 2026 Omni Agent
           </div>
         </div>
 
       </div>
 
-      <footer className="relative z-10 text-center text-xs text-slate-500 pt-4">
-        © 2026 OmniAI Corp. All rights reserved.
+      {/* Footer */}
+      <footer className="relative z-10 text-center py-4 text-[11px] text-slate-500 font-medium">
+        &copy; 2026 SLT-Mobitel &amp; The Embryo Innovation Centre. All Rights Reserved.
       </footer>
     </div>
   );

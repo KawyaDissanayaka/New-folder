@@ -33,18 +33,31 @@ export default function StartPage() {
           <div className="relative z-10 flex items-center justify-between w-full max-w-5xl mx-auto pt-2 px-4 gap-4">
             {/* Primary Parent Brand Logo */}
             <div className="flex items-center gap-3 bg-white p-2.5 px-5 rounded-2xl shadow-md border border-slate-200">
-              <img src="/slt-mobitel-logo.jpg" alt="SLT-MOBITEL" className="h-9 sm:h-11 object-contain" />
+              <div className="w-14 h-10 overflow-hidden flex items-center justify-center rounded-xl bg-white border border-slate-100">
+                <img 
+                  src="/slt-mobitel-logo.jpg" 
+                  alt="SLT-MOBITEL" 
+                  className="w-full h-full object-cover scale-[1.5]" 
+                />
+              </div>
               <div className="w-px h-7 bg-slate-200" />
               <div className="flex flex-col">
-                <span className="text-sm font-black text-slate-900 tracking-tight leading-none">SLT-MOBITEL</span>
-                <span className="text-[10px] font-bold text-indigo-600 tracking-wider uppercase mt-0.5">Sri Lanka Telecom PLC</span>
+                <span className="text-base font-black text-slate-900 tracking-tight leading-none">SLT-MOBITEL</span>
+                <span className="text-[10px] font-extrabold text-indigo-600 tracking-wider uppercase mt-1">Sri Lanka Telecom PLC</span>
               </div>
             </div>
 
             {/* Innovation Partner Badge */}
             <div className="flex items-center gap-3 bg-white p-2.5 px-4 rounded-2xl border border-slate-200 shadow-md">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest hidden sm:inline">Partnered with</span>
-              <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="h-8 sm:h-10 object-contain" />
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest hidden sm:inline">Partnered with</span>
+              <div className="w-px h-5 bg-slate-200 hidden sm:block" />
+              <div className="h-9 w-28 overflow-hidden flex items-center justify-center rounded-lg bg-white">
+                <img 
+                  src="/the-embryo-logo.jpg" 
+                  alt="The Embryo Innovation Centre" 
+                  className="w-full h-full object-contain scale-[1.25]" 
+                />
+              </div>
             </div>
           </div>
 

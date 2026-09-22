@@ -100,33 +100,34 @@ export default function LoginAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-mesh text-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans relative overflow-hidden">
       
-      {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-
       {/* Top Header Link */}
       <header className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-10 max-w-7xl mx-auto w-full">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center font-black text-white text-sm">
-            E
+        <Link to="/" className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="w-10 h-8 overflow-hidden flex items-center justify-center rounded-lg bg-white">
+            <img src="/slt-mobitel-logo.jpg" alt="SLT-Mobitel" className="w-full h-full object-cover scale-[1.5]" />
           </div>
-          <span className="font-extrabold text-lg tracking-tight">OmniAI <span className="text-xs text-purple-400 font-bold">SUPER ADMIN</span></span>
+          <div className="w-px h-5 bg-slate-200" />
+          <span className="text-base font-black text-slate-900">OmniAI <span className="text-xs text-indigo-600 font-bold">SUPER ADMIN</span></span>
         </Link>
 
         {/* Co-Branding Badge */}
-        <div className="hidden sm:flex items-center gap-3 bg-white/95 backdrop-blur-md p-1.5 px-3 rounded-2xl shadow-md border border-white/40">
-          <img src="/slt-mobitel-logo.jpg" alt="SLT Mobitel" className="h-6 object-contain" />
-          <div className="w-px h-4 bg-slate-300" />
-          <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="h-6 object-contain" />
+        <div className="hidden sm:flex items-center gap-3 bg-white px-3.5 py-2 rounded-2xl shadow-sm border border-slate-200">
+          <div className="w-10 h-7 overflow-hidden flex items-center justify-center rounded-md bg-white">
+            <img src="/slt-mobitel-logo.jpg" alt="SLT Mobitel" className="w-full h-full object-cover scale-[1.5]" />
+          </div>
+          <div className="w-px h-4 bg-slate-200" />
+          <div className="h-6 w-20 overflow-hidden flex items-center justify-center">
+            <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="w-full h-full object-contain scale-[1.2]" />
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
-          <Link to="/" className="hover:text-white">Home</Link>
-          <Link to="/terms" className="hover:text-white">Terms &amp; Conditions</Link>
-          <Link to="/privacy" className="hover:text-white">Privacy</Link>
-          <Link to="/contact" className="hover:text-white">Contact</Link>
+        <div className="flex items-center gap-4 text-xs font-bold text-slate-600">
+          <Link to="/" className="hover:text-indigo-600">Home</Link>
+          <Link to="/terms" className="hover:text-indigo-600">Terms &amp; Conditions</Link>
+          <Link to="/privacy" className="hover:text-indigo-600">Privacy</Link>
+          <Link to="/contact" className="hover:text-indigo-600">Contact</Link>
         </div>
       </header>
 

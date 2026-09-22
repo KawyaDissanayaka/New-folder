@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -6,7 +6,7 @@
 }
 
 body {
-  background-color: #f1f5f9;
+  background-color: #f8fafc;
   color: #0f172a;
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
@@ -20,9 +20,9 @@ body {
   }
   
   .glass-card {
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(203, 213, 225, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.9);
     box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 0 15px 0 rgba(99, 102, 241, 0.04);
   }
 
@@ -36,16 +36,30 @@ body {
     transform: translateY(-2px);
   }
 
-  /* Gradient Text Utilities */
-  .gradient-text-hero {
-    background: linear-gradient(135deg, #0284c7 0%, #4f46e5 50%, #7c3aed 100%);
+  /* 2-3 Color Mix Gradient Text Utilities */
+  .gradient-text-primary {
+    background: linear-gradient(135deg, #1e40af 0%, #6366f1 45%, #a855f7 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
-  .gradient-text-cyan {
-    background: linear-gradient(135deg, #0369a1 0%, #3b82f6 100%);
+  .gradient-text-trinity {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gradient-text-cyan-indigo {
+    background: linear-gradient(135deg, #0284c7 0%, #4f46e5 50%, #9333ea 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gradient-text-emerald-blue {
+    background: linear-gradient(135deg, #059669 0%, #2563eb 50%, #7c3aed 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -58,9 +72,9 @@ body {
     -webkit-text-fill-color: transparent;
   }
 
-  /* Rich Soft Slate-Indigo Multi-Mesh Background (Not stark full white) */
+  /* Rich Soft Slate-Indigo Multi-Mesh Background */
   .bg-gradient-mesh {
-    background-color: #f1f5f9;
+    background-color: #f8fafc;
     background-image: 
       radial-gradient(at 0% 0%, rgba(199, 210, 254, 0.5) 0px, transparent 50%),
       radial-gradient(at 100% 0%, rgba(224, 231, 255, 0.6) 0px, transparent 50%),
@@ -71,15 +85,15 @@ body {
 
   /* Dynamic Glowing Button */
   .btn-gradient-glow {
-    background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
     color: #ffffff;
-    font-weight: 700;
+    font-weight: 800;
     box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
     transition: all 0.3s ease;
   }
 
   .btn-gradient-glow:hover {
-    background: linear-gradient(135deg, #0369a1 0%, #4338ca 100%);
+    background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 50%, #6d28d9 100%);
     box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
     transform: translateY(-1px);
   }
@@ -92,32 +106,4 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(0.5deg);
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 0.7;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.03);
-  }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 5s ease-in-out infinite;
 }

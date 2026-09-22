@@ -143,44 +143,42 @@ export default function Register() {
 
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-700/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-700/15 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-700/10 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-gradient-mesh flex flex-col justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
 
       {/* Main Card */}
-      <div className="relative z-10 max-w-5xl w-full mx-auto bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-indigo-900/50 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12">
+      <div className="relative z-10 max-w-5xl w-full mx-auto bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12">
 
         {/* Left Panel */}
-        <div className="md:col-span-4 bg-gradient-to-b from-indigo-950 via-slate-950 to-indigo-950 p-8 flex flex-col justify-between border-r border-indigo-900/40">
+        <div className="md:col-span-4 bg-indigo-600 text-white p-8 flex flex-col justify-between relative">
           <div className="flex flex-col items-center text-center space-y-4">
             {/* Logos badge */}
-            <div className="flex items-center justify-center gap-2 p-2 bg-white/95 rounded-2xl shadow-lg max-w-[200px]">
-              <img src="/slt-mobitel-logo.jpg" alt="SLT Mobitel" className="h-5 object-contain max-w-[80px]" />
-              <div className="w-px h-4 bg-slate-300" />
-              <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="h-5 object-contain max-w-[80px]" />
+            <div className="flex items-center justify-center gap-2 p-2 bg-white rounded-2xl shadow-md">
+              <div className="w-10 h-7 overflow-hidden flex items-center justify-center rounded-md bg-white">
+                <img src="/slt-mobitel-logo.jpg" alt="SLT Mobitel" className="w-full h-full object-cover scale-[1.5]" />
+              </div>
+              <div className="w-px h-4 bg-slate-200" />
+              <div className="h-6 w-16 overflow-hidden flex items-center justify-center">
+                <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="w-full h-full object-contain scale-[1.2]" />
+              </div>
             </div>
 
             <div>
-              <h2 className="text-lg font-extrabold text-white tracking-tight">OmniAI Platform</h2>
-              <p className="text-[11px] text-indigo-300 font-medium mt-1">SLT Digital Lab</p>
+              <h2 className="text-lg font-black text-white tracking-tight">OmniAI Platform</h2>
+              <p className="text-[11px] text-indigo-100 font-medium mt-1">SLT Digital Lab &amp; Embryo Innovation</p>
             </div>
           </div>
 
           <div className="space-y-3 mt-8">
             {[
-              { icon: Building2, color: 'text-cyan-400', title: 'Own Workspace', desc: 'Your organization in one secure place.' },
-              { icon: Layers, color: 'text-purple-400', title: 'Omni Channels', desc: 'WhatsApp, Messenger, Email & Web.' },
-              { icon: Cpu, color: 'text-emerald-400', title: 'AI Agents', desc: 'Deploy smart agents for your customers.' },
-            ].map(({ icon: Icon, color, title, desc }) => (
-              <div key={title} className="bg-indigo-900/40 border border-indigo-700/40 p-3 rounded-2xl flex items-start gap-3">
-                <Icon className={`w-4 h-4 ${color} shrink-0 mt-0.5`} />
+              { icon: Building2, title: 'Own Workspace', desc: 'Your organization in one secure place.' },
+              { icon: Layers, title: 'Omni Channels', desc: 'WhatsApp, Messenger, Email & Web.' },
+              { icon: Cpu, title: 'AI Agents', desc: 'Deploy smart agents for your customers.' },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="bg-white/10 border border-white/20 p-3 rounded-2xl flex items-start gap-3 backdrop-blur-sm">
+                <Icon className="w-4 h-4 text-indigo-200 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-[11px] font-bold text-white">{title}</h4>
-                  <p className="text-[10px] text-slate-400 leading-relaxed">{desc}</p>
+                  <h4 className="text-[11px] font-black text-white">{title}</h4>
+                  <p className="text-[10px] text-indigo-100 leading-relaxed font-medium">{desc}</p>
                 </div>
               </div>
             ))}
@@ -188,25 +186,24 @@ export default function Register() {
 
           {/* Step Indicator */}
           <div className="mt-8 space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Registration Steps</p>
             {[
-              { n: 1, label: 'Company Details' },
-              { n: 2, label: 'Admin Account' },
+              { n: 1, label: 'Company Workspace Info' },
+              { n: 2, label: 'Super Admin Credentials' },
             ].map(({ n, label }) => {
-              const done = step > n;
               const active = step === n;
+              const done = step > n;
               return (
-                <div key={n} className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${active ? 'bg-indigo-600/20 border border-indigo-600/40' : 'opacity-50'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${done ? 'bg-emerald-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-400'}`}>
+                <div key={n} className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${done ? 'bg-emerald-400 text-slate-900' : active ? 'bg-white text-indigo-700' : 'bg-white/20 text-indigo-100'}`}>
                     {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : n}
                   </div>
-                  <span className={`text-[11px] font-semibold ${active ? 'text-white' : 'text-slate-400'}`}>{label}</span>
+                  <span className={`text-[11px] font-bold ${active ? 'text-white' : 'text-indigo-100'}`}>{label}</span>
                 </div>
               );
             })}
           </div>
 
-          <p className="text-[10px] text-slate-500 text-center mt-6">© 2026 OmniAI Platform</p>
+          <p className="text-[10px] text-indigo-100 text-center mt-6 font-medium">&copy; 2026 OmniAI Platform</p>
         </div>
 
         {/* Right Panel */}
