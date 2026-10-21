@@ -19,6 +19,11 @@ import {
   ExternalLink,
   Shield,
   HelpCircle,
+  Database,
+  Wrench,
+  Headset,
+  Eye,
+  ArrowUpRight,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import ChatBotWidget from "../components/ChatBotWidget";
@@ -39,25 +44,42 @@ export default function AdminLayout() {
   };
 
   const companyNavItems = [
-    { name: "Dash-Board", path: "/dashboard", icon: LayoutGrid },
+    { section: "OVERVIEW" },
+    { name: "Dashboard", path: "/dashboard", icon: LayoutGrid },
     { name: "Live ChatBot", path: "/chat", icon: MessageSquare },
-    { name: "Manage Customers", path: "/users", icon: Users },
-    { name: "API", path: "/api", icon: Code2 },
-    { name: "Channels", path: "/channels", icon: SlidersHorizontal },
+    { section: "BUILD" },
     { name: "AI Agents", path: "/agents", icon: Bot },
+    { name: "Knowledge Bases", path: "/knowledge", icon: Database },
+    { name: "Tools & Forms", path: "/tools", icon: Wrench },
+    { section: "OPERATIONS" },
+    { name: "Live Agent Console", path: "/agent/console", icon: Headset },
+    { name: "Chat Monitor", path: "/monitor", icon: Eye },
+    { name: "Channels", path: "/channels", icon: SlidersHorizontal },
+    { section: "WORKSPACE" },
+    { name: "Team & Seats", path: "/team", icon: Shield },
+    { name: "Manage Customers", path: "/users", icon: Users },
+    { name: "API Integration", path: "/api", icon: Code2 },
     { name: "Notifications", path: "/notifications", icon: Bell },
     { name: "Settings", path: "/settings", icon: Settings },
   ];
 
   const adminNavItems = [
+    { section: "OVERVIEW" },
     { name: "Super Admin Dashboard", path: "/admin/dashboard", icon: LayoutGrid },
     { name: "Live ChatBot", path: "/admin/chat", icon: MessageSquare },
-    { name: "Organization Mgmt", path: "/admin/organizations", icon: Building2 },
-    { name: "API Management", path: "/admin/api", icon: Code2 },
-    { name: "Channels Management", path: "/admin/channels", icon: SlidersHorizontal },
-    { name: "AI Agent Management", path: "/admin/agents", icon: Bot },
+    { section: "PLATFORM" },
+    { name: "Organizations", path: "/admin/organizations", icon: Building2 },
+    { name: "AI Agent Studio", path: "/admin/agents", icon: Bot },
+    { name: "Knowledge Bases", path: "/admin/knowledge", icon: Database },
+    { name: "Governed Tools", path: "/admin/tools", icon: Wrench },
+    { section: "OPERATIONS" },
+    { name: "Live Agent Console", path: "/admin/live-agent", icon: Headset },
+    { name: "Chat Monitor", path: "/admin/monitor", icon: Eye },
+    { name: "Channels", path: "/admin/channels", icon: SlidersHorizontal },
+    { name: "API Gateway", path: "/admin/api", icon: Code2 },
+    { section: "SETTINGS" },
     { name: "Notifications", path: "/admin/notifications", icon: Bell },
-    { name: "Settings", path: "/admin/settings", icon: Settings },
+    { name: "Platform Settings", path: "/admin/settings", icon: Settings },
   ];
 
   const navItems = isAdminMode ? adminNavItems : companyNavItems;
@@ -119,29 +141,37 @@ export default function AdminLayout() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 px-3 pt-4 space-y-1.5 overflow-y-auto no-scrollbar">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+        <nav className="flex-1 px-3 pt-3 space-y-1 overflow-y-auto no-scrollbar">
+          {navItems.map((item, idx) => {
+            if ('section' in item && item.section) {
+              return (
+                <div key={`sec-${idx}`} className="pt-3 pb-1 px-3 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  {item.section}
+                </div>
+              );
+            }
+            if (!('path' in item) || !item.path) return null;
+            const Icon = item.icon!;
             const active = isActive(item.path);
             return (
               <Link
                 key={item.name}
                 to={item.path}
                 onClick={() => setIsMobileSidebarOpen(false)}
-                className={`group flex items-center gap-3 h-10 w-full px-3 text-xs font-semibold transition-all duration-150 rounded-xl cursor-pointer ${
+                className={`group flex items-center gap-3 h-9 w-full px-3 text-xs font-semibold transition-all duration-150 rounded-xl cursor-pointer ${
                   active
                     ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-bold"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div
-                  className={`w-7 h-7 flex items-center justify-center rounded-lg shrink-0 transition-all ${
+                  className={`w-6 h-6 flex items-center justify-center rounded-lg shrink-0 transition-all ${
                     active
                       ? "bg-white/20 text-white"
                       : "bg-slate-100 text-indigo-600 group-hover:bg-indigo-50 group-hover:text-indigo-700"
                   }`}
                 >
-                  <Icon size={15} strokeWidth={2} />
+                  <Icon size={14} strokeWidth={2} />
                 </div>
                 <span className="truncate tracking-wide">{item.name}</span>
               </Link>
@@ -149,8 +179,23 @@ export default function AdminLayout() {
           })}
         </nav>
 
+        {/* Quick Link: Open Live Agent Console */}
+        <div className="px-3 pt-2">
+          <Link
+            to="/agent/console"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="w-full py-2 px-3 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200/60 flex items-center justify-between transition-all shadow-2xs"
+          >
+            <div className="flex items-center gap-2">
+              <Headset className="w-3.5 h-3.5" />
+              <span>Open Agent Console</span>
+            </div>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
         {/* Logout Section */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50/40">
+        <div className="p-3 border-t border-slate-100 bg-slate-50/40">
           <button
             onClick={handleLogout}
             className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all border border-slate-200 cursor-pointer"

@@ -48,6 +48,10 @@ import Notifications from "@/pages/notifications/Notifications";
 import ChatBotPlayground from "@/pages/agents/ChatBotPlayground";
 import LiveAgentConsole from "@/pages/agent/LiveAgentConsole";
 import HostedChatWidget from "@/pages/public/HostedChatWidget";
+import KnowledgeBases from "@/pages/knowledge/KnowledgeBases";
+import ToolsManagement from "@/pages/tools/ToolsManagement";
+import TeamSeats from "@/pages/team/TeamSeats";
+import ChatMonitor from "@/pages/monitor/ChatMonitor";
 
 // Dashboard Pages (Super Admin Workplace)
 import SuperAdminDashboard from "@/pages/superadmin/SuperAdminDashboard";
@@ -114,6 +118,11 @@ function App() {
             <Route path="/live-agent" element={<LiveAgentConsole />} />
             <Route path="/chat" element={<ChatBotPlayground />} />
             <Route path="/users" element={<UserManagement />} />
+            <Route path="/team" element={<TeamSeats />} />
+            <Route path="/knowledge" element={<KnowledgeBases />} />
+            <Route path="/tools" element={<ToolsManagement />} />
+            <Route path="/monitor" element={<ChatMonitor />} />
+            <Route path="/chats" element={<ChatMonitor />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/api" element={<Api />} />
             <Route path="/channels" element={<Channels />} />
@@ -125,6 +134,10 @@ function App() {
             <Route path="/admin/chat" element={<ChatBotPlayground />} />
             <Route path="/admin/organizations" element={<OrganizationManagement />} />
             <Route path="/admin/packages" element={<SubscriptionPackages />} />
+            <Route path="/admin/knowledge" element={<KnowledgeBases />} />
+            <Route path="/admin/tools" element={<ToolsManagement />} />
+            <Route path="/admin/live-agent" element={<LiveAgentConsole />} />
+            <Route path="/admin/monitor" element={<ChatMonitor />} />
             <Route path="/admin/api" element={<Api />} />
             <Route path="/admin/channels" element={<Channels />} />
             <Route path="/admin/agents" element={<Agents />} />

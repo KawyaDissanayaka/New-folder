@@ -1,548 +1,561 @@
-import React, { useState } from 'react';
-import { Bot, Shield, Play, Terminal, Cpu, Database, CheckCircle2, AlertTriangle, RefreshCw, Send, Plus, ArrowLeft, Building2, X } from 'lucide-react';
-import Button from '@/components/Button';
-import InputField from '@/components/InputField';
-import { apiClient } from '@/api/apiClient';
+import React, { useState, useEffect } from 'react';
+import { Bot, Shield, Play, Terminal, Cpu, Database, CheckCircle2, AlertTriangle, RefreshCw, Send, Plus, ArrowLeft, Building2, X, ExternalLink, Edit2, Trash2, Sparkles, MessageSquare } from 'lucide-react';
+import ToastContainer, { type ToastMessage } from '@/components/Toast';
+
+export interface AIAgent {
+  agentId: string;
+  displayName: string;
+  brandName: string;
+  publicAgentKey: string;
+  status: 'PUBLISHED' | 'DRAFT';
+  modelId: string;
+  knowledgeBaseRef?: string;
+  toolIds: string[];
+  enabledSubAgents: string[];
+  welcomeMessage: string;
+  systemPrompt: string;
+  suggestedPrompts: string[];
+}
 
 export default function Agents() {
-  const [selectedOrg, setSelectedOrg] = useState<string | null>('ABC Company (pvt) Ltd');
-  const [activeChannelTab, setActiveChannelTab] = useState<'whatsapp' | 'messenger' | 'sms' | 'email'>('whatsapp');
-  const [showTestDrawer, setShowTestDrawer] = useState(false);
-  const [showKnowledgeModal, setShowKnowledgeModal] = useState(false);
-  const [showCreateAgentModal, setShowCreateAgentModal] = useState(false);
-  const [newAgentName, setNewAgentName] = useState('');
-  const [newAgentPrompt, setNewAgentPrompt] = useState('You are an helpful AI customer support agent for SLT.');
-  const [selectedBaseModel, setSelectedBaseModel] = useState('gpt4');
-
-  // Test Chat Drawer State
-  const [messages, setMessages] = useState([
-    { id: 1, sender: 'bot', text: 'Hello! I am Omni Agent WhatsApp v3.0. How can I assist you with SLT services today?' }
+  const [agents, setAgents] = useState<AIAgent[]>([
+    {
+      agentId: 'agent-care',
+      displayName: 'Customer Care Specialist',
+      brandName: 'SLT-MOBITEL',
+      publicAgentKey: 'customer-care',
+      status: 'PUBLISHED',
+      modelId: 'amazon.nova-lite-v1:0',
+      knowledgeBaseRef: 'kb-products',
+      toolIds: ['tool-ticket', 'form-lead', 'tool-bill-lookup'],
+      enabledSubAgents: ['general', 'sales', 'billing', 'technical', 'lead'],
+      welcomeMessage: 'Hello! I am your SLT-Mobitel AI Care Assistant. How can I assist you with your broadband or services today?',
+      systemPrompt: 'You are an official customer care assistant for SLT-Mobitel. Answer using approved grounded company information.',
+      suggestedPrompts: ['Explore Fiber packages', 'Check my bill balance', 'Technical troubleshooting', 'Talk to a human agent'],
+    },
+    {
+      agentId: 'agent-sales',
+      displayName: 'Broadband & Enterprise Sales Guide',
+      brandName: 'SLT-MOBITEL',
+      publicAgentKey: 'sales-guide',
+      status: 'DRAFT',
+      modelId: 'amazon.nova-lite-v1:0',
+      knowledgeBaseRef: 'kb-products',
+      toolIds: ['form-lead', 'tool-order'],
+      enabledSubAgents: ['general', 'sales', 'lead'],
+      welcomeMessage: 'Welcome! Let us help you find the perfect high-speed broadband package for your home or business.',
+      systemPrompt: 'Assist customers in choosing the optimal connectivity tier and collect lead details.',
+      suggestedPrompts: ['Compare unlimited packages', 'New connection offers', 'Contact sales specialist'],
+    },
   ]);
-  const [inputMessage, setInputMessage] = useState('');
 
-  const [organizations, setOrganizations] = useState<any[]>([]);
-
-  React.useEffect(() => {
-    const fetchOrgs = async () => {
-      try {
-        const res = await fetch('http://localhost:3001/api/registrations');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.registrations)) {
-            const activeOrgs = data.registrations
-              .filter((r: any) => r.status === 'Approved')
-              .map((r: any, idx: number) => ({
-                id: r.id || String(idx + 1),
-                name: r.companyName,
-                logo: r.companyName.substring(0, 2).toUpperCase(),
-                color: 'from-blue-600 to-indigo-600',
-              }));
-            setOrganizations(activeOrgs);
-            if (activeOrgs.length > 0 && !selectedOrg) {
-              setSelectedOrg(activeOrgs[0].name);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Backend unreachable:', err);
-      }
-    };
-    fetchOrgs();
-  }, []);
-
-  const agentConfigByChannel = {
-    whatsapp: { name: 'Omni Whatsapp Agent v.3.0', status: 'Online', model: 'SLT-LLM-v3.0' },
-    messenger: { name: 'Omni Messenger Agent v.2.0', status: 'Online', model: 'SLT-LLM-v2.0' },
-    sms: { name: 'Omni SMS Agent v.1.0', status: 'Online', model: 'SLT-LLM-v1.0' },
-    email: { name: 'Omni Email Agent v.2.4', status: 'Online', model: 'SLT-LLM-v2.4' },
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const handleSendMessage = async (e: React.FormEvent, intentOverride?: string) => {
-    if (e) e.preventDefault();
-    const intentToRun = intentOverride || 'check_balance';
-    const textToSend = inputMessage.trim() || `Run Intent: ${intentToRun}`;
-    if (!textToSend && !intentOverride) return;
+  // Test Drawer State
+  const [showTestDrawer, setShowTestDrawer] = useState(false);
+  const [testingAgent, setTestingAgent] = useState<AIAgent | null>(agents[0]);
+  const [testMessages, setTestMessages] = useState<Array<{ id: number; sender: 'user' | 'bot'; text: string }>>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTestSending, setIsTestSending] = useState(false);
 
-    const userMsg = { id: Date.now(), sender: 'user', text: textToSend };
-    setMessages((prev) => [...prev, userMsg]);
-    setInputMessage('');
+  // Create / Edit Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAgent, setEditingAgent] = useState<AIAgent | null>(null);
 
-    try {
-      const res = await fetch('http://localhost:3001/api/agent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer dev-token-staff',
-          'x-tenant-id': 'dev-tenant-local',
-          'x-channel': activeChannelTab,
-        },
-        body: JSON.stringify({
-          intent: intentToRun,
-          params: { query: textToSend }
-        })
-      });
+  const [formData, setFormData] = useState({
+    displayName: '',
+    brandName: 'SLT-MOBITEL',
+    publicAgentKey: '',
+    modelId: 'amazon.nova-lite-v1:0',
+    knowledgeBaseRef: 'kb-products',
+    suggestedPrompts: 'Explore packages, Check my bill, Technical help, Talk to person',
+    welcomeMessage: 'Hi! How can I assist you today?',
+    systemPrompt: 'Answer queries using approved knowledge bases and approved tool invocations.',
+    toolIds: ['tool-ticket', 'form-lead'],
+    enabledSubAgents: ['general', 'sales', 'billing', 'technical', 'lead'],
+  });
 
-      const resData = await res.json();
-      if (resData.success) {
-        let replyStr = `[Backend Agent ${agentConfigByChannel[activeChannelTab].name}]: Intent '${intentToRun}' executed successfully.`;
-        if (intentToRun === 'check_balance') {
-          replyStr = `[Billing Agent]: Balance is ${resData.data?.currentBalance || 'LKR 3,450.00'}. Due Date: ${resData.data?.dueDate || '2026-09-28'}.`;
-        } else if (intentToRun === 'pay_bill') {
-          replyStr = `[Billing Agent]: Payment confirmed! Transaction ID: ${resData.data?.transactionId || 'TXN-88219482'}.`;
-        } else if (intentToRun === 'check_usage') {
-          replyStr = `[Usage Agent]: Used ${resData.data?.usedDataGB || '68.4'} GB of ${resData.data?.totalDataGB || '100'} GB. Voice: ${resData.data?.voiceMinutesUsed || '420'} mins.`;
-        } else if (intentToRun === 'troubleshoot_router') {
-          replyStr = `[Support Agent RAG]: Solution: ${resData.data?.result?.title || 'Power cycle router and check LAN cabling.'}`;
-        }
+  const availableKBs = [
+    { id: 'kb-products', name: 'Products & Packages' },
+    { id: 'kb-support', name: 'Support & Troubleshooting' },
+    { id: 'kb-billing', name: 'Billing Policies' },
+  ];
 
-        setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: replyStr }]);
-      } else {
-        setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: `⚠️ Agent Error: ${resData.error?.message || 'Action failed'}` }]);
-      }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'bot',
-          text: `[AI Agent ${agentConfigByChannel[activeChannelTab].name} Response]: Processed intent '${intentToRun}' (Simulated fallback).`
-        }
-      ]);
+  const availableTools = [
+    { id: 'tool-ticket', name: 'Create Support Ticket (MCP)' },
+    { id: 'tool-order', name: 'Check Order & Fault Status (API)' },
+    { id: 'form-lead', name: 'Sales Interest Form (Form)' },
+    { id: 'tool-bill-lookup', name: 'Billing & Invoice Lookup (API)' },
+  ];
+
+  const openCreateModal = () => {
+    setEditingAgent(null);
+    setFormData({
+      displayName: '',
+      brandName: 'SLT-MOBITEL',
+      publicAgentKey: '',
+      modelId: 'amazon.nova-lite-v1:0',
+      knowledgeBaseRef: 'kb-products',
+      suggestedPrompts: 'Explore packages, Check my bill, Technical help, Talk to a person',
+      welcomeMessage: 'Hello! I am your AI assistant. How can I help you today?',
+      systemPrompt: 'Answer queries using approved knowledge bases and invoke authorized tools.',
+      toolIds: ['tool-ticket', 'form-lead'],
+      enabledSubAgents: ['general', 'sales', 'billing', 'technical', 'lead'],
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (agent: AIAgent) => {
+    setEditingAgent(agent);
+    setFormData({
+      displayName: agent.displayName,
+      brandName: agent.brandName,
+      publicAgentKey: agent.publicAgentKey,
+      modelId: agent.modelId,
+      knowledgeBaseRef: agent.knowledgeBaseRef || '',
+      suggestedPrompts: agent.suggestedPrompts.join(', '),
+      welcomeMessage: agent.welcomeMessage,
+      systemPrompt: agent.systemPrompt,
+      toolIds: agent.toolIds,
+      enabledSubAgents: agent.enabledSubAgents,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSaveAgent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.displayName || !formData.publicAgentKey) {
+      addToast('Please provide Agent Name and Public URL Key', 'error');
+      return;
+    }
+
+    const cleanKey = formData.publicAgentKey.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    const promptsArray = formData.suggestedPrompts
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    const savedAgent: AIAgent = {
+      agentId: editingAgent ? editingAgent.agentId : `agent-${Date.now()}`,
+      displayName: formData.displayName,
+      brandName: formData.brandName || 'SLT-MOBITEL',
+      publicAgentKey: cleanKey,
+      status: editingAgent ? editingAgent.status : 'DRAFT',
+      modelId: formData.modelId,
+      knowledgeBaseRef: formData.knowledgeBaseRef || undefined,
+      toolIds: formData.toolIds,
+      enabledSubAgents: formData.enabledSubAgents,
+      welcomeMessage: formData.welcomeMessage,
+      systemPrompt: formData.systemPrompt,
+      suggestedPrompts: promptsArray,
+    };
+
+    if (editingAgent) {
+      setAgents((prev) => prev.map((a) => (a.agentId === editingAgent.agentId ? savedAgent : a)));
+      addToast(`AI Agent '${savedAgent.displayName}' updated!`, 'success');
+    } else {
+      setAgents((prev) => [savedAgent, ...prev]);
+      addToast(`AI Agent '${savedAgent.displayName}' created!`, 'success');
+    }
+
+    setIsModalOpen(false);
+  };
+
+  const handlePublish = (agentId: string) => {
+    setAgents((prev) =>
+      prev.map((a) => (a.agentId === agentId ? { ...a, status: 'PUBLISHED' } : a))
+    );
+    const agent = agents.find((a) => a.agentId === agentId);
+    addToast(`Agent '${agent?.displayName}' is now PUBLISHED and live on public URL!`, 'success');
+  };
+
+  const handleDelete = (agentId: string) => {
+    if (confirm('Delete this AI agent? Customer traffic to this public URL will be disconnected.')) {
+      setAgents((prev) => prev.filter((a) => a.agentId !== agentId));
+      addToast('AI Agent deleted', 'info');
     }
   };
 
+  const startTestChat = (agent: AIAgent) => {
+    setTestingAgent(agent);
+    setTestMessages([
+      { id: 1, sender: 'bot', text: agent.welcomeMessage },
+    ]);
+    setShowTestDrawer(true);
+  };
+
+  const handleSendTestMessage = (e?: React.FormEvent, promptOverride?: string) => {
+    if (e) e.preventDefault();
+    const textToSend = promptOverride || inputMessage.trim();
+    if (!textToSend || !testingAgent) return;
+
+    setTestMessages((prev) => [...prev, { id: Date.now(), sender: 'user', text: textToSend }]);
+    setInputMessage('');
+    setIsTestSending(true);
+
+    setTimeout(() => {
+      let reply = `[${testingAgent.displayName} - ${testingAgent.modelId}]: Thank you for your inquiry.`;
+      const lower = textToSend.toLowerCase();
+
+      if (lower.includes('package') || lower.includes('fiber') || lower.includes('plan')) {
+        reply = `According to our grounded Bedrock Knowledge Base (${testingAgent.knowledgeBaseRef || 'KB-Products'}), SLT-Mobitel offers Fibre Flash 300Mbps (LKR 4,990) and Fibre Ultra 1Gbps (LKR 9,990) with zero line rental this month. Would you like me to open the sales form?`;
+      } else if (lower.includes('bill') || lower.includes('balance') || lower.includes('pay')) {
+        reply = `Invoking tool 'fetch_billing_summary'... Your current balance is LKR 3,450.00. Payment due by the 28th. Would you like a payment link?`;
+      } else if (lower.includes('human') || lower.includes('person') || lower.includes('agent')) {
+        reply = `I will transfer you to our live human support team right away. Escalate session created and routed to the Live Agent Queue!`;
+      } else if (lower.includes('router') || lower.includes('troubleshoot') || lower.includes('fault')) {
+        reply = `Knowledge Base Troubleshooting Guide: 1) Verify the PON light is solid green. 2) If LOS light is flashing red, fiber optical signal is disconnected. Would you like me to log a fault ticket?`;
+      }
+
+      setTestMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: reply }]);
+      setIsTestSending(false);
+    }, 700);
+  };
+
   return (
-    <div className="space-y-6 font-sans">
-      
-      {/* 1. If No Organization Selected -> Show Organization Selector Grid (Matching Image 3 Top) */}
-      {!selectedOrg ? (
-        <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Select The Organization</h1>
-            <p className="text-xs text-slate-500">Select the Organization (Company) to manage the AI Agent of its.</p>
-          </div>
+    <div className="space-y-6 font-sans max-w-7xl mx-auto w-full">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {organizations.map((org) => (
-              <div
-                key={org.id}
-                onClick={() => setSelectedOrg(org.name)}
-                className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-400 transition-all cursor-pointer text-center space-y-4 group"
-              >
-                <div className={`w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br ${org.color} text-white font-black text-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
-                  {org.logo}
-                </div>
-                <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{org.name}</h3>
-              </div>
-            ))}
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl border border-indigo-900/50 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-cyan-400 shadow-md">
+            <Bot className="w-6 h-6" />
           </div>
-        </div>
-      ) : (
-        /* 2. Super Admin AI Agent Management View (Matching Images 3, 4, 5) */
-        <div className="space-y-6">
-          
-          {/* Top Banner with Selected Org Header Badge */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl shadow-xl border border-indigo-900/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <button
-                onClick={() => setSelectedOrg(null)}
-                className="text-xs font-bold text-cyan-400 hover:underline flex items-center gap-1 mb-2"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Switch Organization</span>
-              </button>
-              <h1 className="text-2xl font-black tracking-tight">AI Agent</h1>
-              <p className="text-xs text-slate-300 mt-0.5">Real-time infrastructure health and user growth metrics for SLT Global.</p>
-            </div>
-
-            <div className="bg-white text-slate-900 p-3.5 rounded-2xl border border-slate-200 shadow-md flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white font-black flex items-center justify-center text-xs shadow-xs">
-                Abc
-              </div>
-              <div>
-                <h4 className="text-xs font-black">{selectedOrg}</h4>
-                <span className="text-[9px] text-slate-400 block">50 APIs Management System</span>
-              </div>
-              <span className="ml-2 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                ● Connection: Active
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black tracking-tight">AI Agent Studio</h1>
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/30 text-[10px] font-black uppercase tracking-wider">
+                Amazon Nova & Bedrock
               </span>
             </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Build and publish grounded AI agents with Bedrock knowledge bases, governed tools, and live handoff routing.
+            </p>
           </div>
-
-          {/* Channel AI Agent Navigation Tabs */}
-          <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs">
-            <button
-              onClick={() => setActiveChannelTab('whatsapp')}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeChannelTab === 'whatsapp'
-                  ? 'bg-purple-900 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              Whatsapp Agent
-            </button>
-            <button
-              onClick={() => setActiveChannelTab('messenger')}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeChannelTab === 'messenger'
-                  ? 'bg-purple-900 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              Messenger Agent
-            </button>
-            <button
-              onClick={() => setActiveChannelTab('sms')}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeChannelTab === 'sms'
-                  ? 'bg-purple-900 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              SMS Agent
-            </button>
-            <button
-              onClick={() => setActiveChannelTab('email')}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeChannelTab === 'email'
-                  ? 'bg-purple-900 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              Email Agent
-            </button>
-          </div>
-
-          {/* AI Agent Fleet Cards Grid */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-900">AI Agent Fleet</h3>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowCreateAgentModal(true)}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Create Agent (`POST /agents`)</span>
-                </button>
-                <button
-                  onClick={() => setShowKnowledgeModal(true)}
-                  className="text-xs font-bold text-purple-600 hover:underline"
-                >
-                  Manage Knowledge Base
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              
-              {/* Nexus-1 Support Bot Card */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-2xl bg-cyan-50 text-cyan-600">
-                      <Bot className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900">Nexus-1 Support Bot</h4>
-                      <span className="text-[10px] text-slate-400">Model: SLT-LLM-v3.0 + RAG</span>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">ACTIVE</span>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className="text-slate-500">Response Accuracy</span>
-                    <span className="text-emerald-600">97.8%</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="bg-emerald-500 h-full w-[97.8%]" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">Active Chats</span>
-                    <span className="font-bold text-slate-900">142</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">Avg Latency</span>
-                    <span className="font-bold text-slate-900">0.8s</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sentinel Guard Card */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
-                      <Shield className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900">Sentinel Guard</h4>
-                      <span className="text-[10px] text-slate-400">Model: SLT-Guard-v1.5</span>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">ACTIVE</span>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-bold">
-                    <span className="text-slate-500">Threat Protection</span>
-                    <span className="text-purple-600">99.4%</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="bg-purple-600 h-full w-[99.4%]" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">Scanned Intent</span>
-                    <span className="font-bold text-slate-900">2,201</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-bold">True Positive</span>
-                    <span className="font-bold text-slate-900">100%</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Channel Agent Test Control Bar */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-purple-600 text-white">
-                <Bot className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-slate-900">{agentConfigByChannel[activeChannelTab].name}</h3>
-                <span className="text-[10px] font-bold text-emerald-600">● {agentConfigByChannel[activeChannelTab].status} ({agentConfigByChannel[activeChannelTab].model})</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowTestDrawer(true)}
-              className="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs shadow-md flex items-center gap-2"
-            >
-              <Play className="w-4 h-4" />
-              <span>Test Agent</span>
-            </button>
-          </div>
-
-          {/* System Runtime Logs & Base Model Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            {/* System Runtime Logs Terminal (8 cols) */}
-            <div className="lg:col-span-8 bg-slate-900 text-slate-200 p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-emerald-400" />
-                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">SYSTEM RUNTIME LOGS</h4>
-                </div>
-                <span className="text-[10px] font-mono text-slate-500">Node: slt-edge-colombo-01</span>
-              </div>
-
-              <div className="font-mono text-[11px] leading-relaxed space-y-1.5 h-44 overflow-y-auto pr-2 text-slate-400">
-                <p><span className="text-emerald-400">[2023-11-20 14:22:01]</span> <span className="text-cyan-400">INFO:</span> Initializing Gateway Node 01 Router...</p>
-                <p><span className="text-emerald-400">[2023-11-20 14:22:05]</span> <span className="text-cyan-400">INFO:</span> WhatsApp webhook live connection established.</p>
-                <p><span className="text-emerald-400">[2023-11-20 14:22:12]</span> <span className="text-amber-400">ACTION:</span> Download index key embedding from SLT_RAG_Base_v2.</p>
-                <p><span className="text-emerald-400">[2023-11-20 14:22:20]</span> <span className="text-cyan-400">INFO:</span> Messenger AI Agent Model slt-llm-v2.0 re-eval completed.</p>
-                <p><span className="text-emerald-400">[2023-11-20 14:22:31]</span> <span className="text-cyan-400">INFO:</span> Security Audit verified. 0 vulnerability incursions.</p>
-              </div>
-            </div>
-
-            {/* Base Model Selection Card (4 cols) */}
-            <div className="lg:col-span-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-900">Base Model</h4>
-                <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[9px] font-bold">SLT-LLM</span>
-              </div>
-
-              <div className="space-y-3">
-                <div
-                  onClick={() => setSelectedBaseModel('gpt4')}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedBaseModel === 'gpt4' ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-500/20' : 'bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-900">GPT-4-Turbo</h5>
-                    <span className="text-[10px] text-slate-400 block">Fast fine-tuned model for SLT</span>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-slate-700">3.25/t</span>
-                </div>
-
-                <div
-                  onClick={() => setSelectedBaseModel('llama')}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedBaseModel === 'llama' ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-500/20' : 'bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-900">Llama-3 70B</h5>
-                    <span className="text-[10px] text-slate-400 block">Open-weights on-prem model</span>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-slate-700">0.85/t</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
         </div>
-      )}
 
-      {/* Live Agent Test Drawer */}
-      {showTestDrawer && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex justify-end">
-          <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between">
-            <div className="p-6 bg-slate-900 text-white flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Bot className="w-6 h-6 text-cyan-400" />
-                <div>
-                  <h3 className="text-sm font-bold">{agentConfigByChannel[activeChannelTab].name}</h3>
-                  <span className="text-[10px] text-emerald-400">● Live Test Mode Active</span>
-                </div>
-              </div>
-              <button onClick={() => setShowTestDrawer(false)} className="text-slate-400 hover:text-white">✕</button>
-            </div>
+        <button
+          onClick={openCreateModal}
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create AI Agent</span>
+        </button>
+      </div>
 
-            <div className="p-6 flex-1 overflow-y-auto space-y-4 bg-slate-50">
-              {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-3.5 rounded-2xl max-w-[80%] text-xs ${
-                    m.sender === 'user' ? 'bg-purple-600 text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-xs'
-                  }`}>
-                    {m.text}
-                  </div>
-                </div>
+      {/* Agents Table Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-black text-slate-900">Configured AI Agents</h3>
+            <p className="text-xs text-slate-500">Autonomous customer engagement and specialist routing endpoints</p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black">
+            {agents.length} Agents Configured
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th className="py-3 px-5">Agent</th>
+                <th className="py-3 px-5">Public Customer URL</th>
+                <th className="py-3 px-5">Foundation Model</th>
+                <th className="py-3 px-5">Knowledge & Tools</th>
+                <th className="py-3 px-5">Status</th>
+                <th className="py-3 px-5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium">
+              {agents.map((agent) => (
+                <tr key={agent.agentId} className="hover:bg-slate-50/70 transition-colors">
+                  <td className="py-4 px-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center font-black">
+                        <Bot className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <strong className="text-sm font-black text-slate-900 block">{agent.displayName}</strong>
+                        <span className="text-[10px] text-slate-400 font-mono">{agent.agentId} · {agent.brandName}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="py-4 px-5">
+                    <a
+                      href={`/chat/slt/${agent.publicAgentKey}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-[11px] text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-semibold group"
+                    >
+                      <span>/chat/slt/{agent.publicAgentKey}</span>
+                      <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </a>
+                  </td>
+
+                  <td className="py-4 px-5">
+                    <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-mono text-[11px] font-bold">
+                      {agent.modelId}
+                    </span>
+                  </td>
+
+                  <td className="py-4 px-5">
+                    <div className="space-y-1">
+                      <span className="text-[11px] text-slate-700 block">
+                        KB: <strong className="font-mono text-indigo-600">{agent.knowledgeBaseRef || 'None'}</strong>
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {agent.toolIds.length} Tools · {agent.enabledSubAgents.length} Sub-agents
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="py-4 px-5">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 w-max ${
+                        agent.status === 'PUBLISHED'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${agent.status === 'PUBLISHED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      {agent.status}
+                    </span>
+                  </td>
+
+                  <td className="py-4 px-5 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => startTestChat(agent)}
+                        className="px-3 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Simulate / Test Agent"
+                      >
+                        <Play className="w-3 h-3" />
+                        <span>Test</span>
+                      </button>
+
+                      {agent.status !== 'PUBLISHED' && (
+                        <button
+                          onClick={() => handlePublish(agent.agentId)}
+                          className="px-3 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs transition-colors cursor-pointer"
+                        >
+                          Publish
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => openEditModal(agent)}
+                        className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Configure Agent"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(agent.agentId)}
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Delete Agent"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </div>
-
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-200 bg-white flex gap-2">
-              <input
-                type="text"
-                placeholder="Type test message..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none"
-              />
-              <button type="submit" className="p-2.5 rounded-xl bg-purple-600 text-white hover:bg-purple-700">
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
-      {/* Knowledge Base Modal */}
-      {showKnowledgeModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-lg w-full border border-slate-200 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-slate-900">Manage Knowledge Base Documents</h3>
-            <p className="text-xs text-slate-500">Upload PDF, Docx, or CSV files to enrich your AI Agent's RAG knowledge embeddings.</p>
-
-            <div className="border-2 border-dashed border-slate-300 p-8 rounded-2xl text-center space-y-2 hover:border-purple-500 transition-colors cursor-pointer bg-slate-50">
-              <Database className="w-8 h-8 text-purple-600 mx-auto" />
-              <span className="text-xs font-bold text-slate-700 block">Click to upload files</span>
-              <span className="text-[10px] text-slate-400 block">PDF, DOCX, CSV up to 25MB</span>
-            </div>
-
-            <div className="flex justify-end pt-4 border-t border-slate-100">
-              <button
-                onClick={() => setShowKnowledgeModal(false)}
-                className="px-5 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs"
-              >
-                Close Modal
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Agent Modal (`POST /agents`) */}
-      {showCreateAgentModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 font-sans">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 shadow-2xl space-y-4">
+      {/* === MODAL: CREATE / EDIT AI AGENT === */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full p-6 space-y-5 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-base font-black text-slate-900">Create New AI Agent</h3>
-                <span className="text-[10px] text-indigo-600 font-mono font-semibold">Endpoint: POST /agents</span>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                  <Bot className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">
+                    {editingAgent ? 'Edit AI Agent' : 'Create AI Agent'}
+                  </h3>
+                  <p className="text-xs text-slate-500">Configure prompt instructions, Bedrock model, knowledge, and tools</p>
+                </div>
               </div>
-              <button onClick={() => setShowCreateAgentModal(false)} className="p-1 rounded-lg hover:bg-slate-100">
-                <X className="w-5 h-5 text-slate-500" />
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg p-1"
+              >
+                ×
               </button>
             </div>
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  await apiClient.post('/agents', {
-                    name: newAgentName || `Agent-${activeChannelTab.toUpperCase()}`,
-                    channel: activeChannelTab,
-                    model: selectedBaseModel,
-                    prompt: newAgentPrompt,
-                    tools: ['check_balance', 'pay_bill', 'check_usage', 'troubleshoot_router'],
-                  });
-                  alert(`Agent "${newAgentName || 'New Agent'}" created successfully via POST /agents!`);
-                } catch (err: any) {
-                  alert(`Created agent "${newAgentName || 'New Agent'}" (Simulation Mode)`);
-                }
-                setShowCreateAgentModal(false);
-              }}
-              className="space-y-4 text-xs"
-            >
+            <form onSubmit={handleSaveAgent} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Display Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Customer Care Specialist"
+                    value={formData.displayName}
+                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Public URL Key * (Slug)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="customer-care"
+                    value={formData.publicAgentKey}
+                    onChange={(e) => setFormData({ ...formData, publicAgentKey: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Brand Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.brandName}
+                    onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Foundation Model
+                  </label>
+                  <select
+                    value={formData.modelId}
+                    onChange={(e) => setFormData({ ...formData, modelId: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold"
+                  >
+                    <option value="amazon.nova-lite-v1:0">Amazon Nova Lite (Fast & Cost Efficient)</option>
+                    <option value="amazon.nova-pro-v1:0">Amazon Nova Pro (Complex Reasoning)</option>
+                    <option value="anthropic.claude-3-haiku">Claude 3 Haiku (Bedrock)</option>
+                    <option value="meta.llama3-8b-instruct">Llama 3 8B Instruct</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Agent Name</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Connected Knowledge Base (RAG Grounding)
+                </label>
+                <select
+                  value={formData.knowledgeBaseRef}
+                  onChange={(e) => setFormData({ ...formData, knowledgeBaseRef: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                >
+                  <option value="">None (No RAG grounding)</option>
+                  {availableKBs.map((kb) => (
+                    <option key={kb.id} value={kb.id}>
+                      {kb.name} ({kb.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Suggested Prompts (Comma separated chips for customer chat)
+                </label>
                 <input
                   type="text"
-                  placeholder="e.g. SLT Whatsapp Customer Assistant"
-                  value={newAgentName}
-                  onChange={(e) => setNewAgentName(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium"
-                  required
+                  placeholder="Explore packages, Check my bill, Technical help, Talk to person"
+                  value={formData.suggestedPrompts}
+                  onChange={(e) => setFormData({ ...formData, suggestedPrompts: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                />
+              </div>
+
+              {/* Tools Selection Checkboxes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Authorized Governed Tools & Forms
+                </label>
+                <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                  {availableTools.map((tool) => {
+                    const isChecked = formData.toolIds.includes(tool.id);
+                    return (
+                      <label key={tool.id} className="flex items-center gap-2 text-xs font-medium text-slate-800 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({ ...formData, toolIds: [...formData.toolIds, tool.id] });
+                            } else {
+                              setFormData({ ...formData, toolIds: formData.toolIds.filter((id) => id !== tool.id) });
+                            }
+                          }}
+                          className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                        />
+                        <span>{tool.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Welcome Message
+                </label>
+                <textarea
+                  rows={2}
+                  value={formData.welcomeMessage}
+                  onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Channel Binding</label>
-                <input
-                  type="text"
-                  value={activeChannelTab.toUpperCase()}
-                  disabled
-                  className="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl font-bold text-indigo-600"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">System Prompt / Instructions</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  System Prompt & Guardrail Instructions
+                </label>
                 <textarea
                   rows={3}
-                  value={newAgentPrompt}
-                  onChange={(e) => setNewAgentPrompt(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                  value={formData.systemPrompt}
+                  onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowCreateAgentModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md cursor-pointer"
                 >
-                  Save Agent
+                  {editingAgent ? 'Save Changes' : 'Create Agent'}
                 </button>
               </div>
             </form>
@@ -550,6 +563,87 @@ export default function Agents() {
         </div>
       )}
 
+      {/* === TEST SIMULATION DRAWER === */}
+      {showTestDrawer && testingAgent && (
+        <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[440px] bg-white border-l border-slate-200 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
+                <Bot className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-slate-900">{testingAgent.displayName}</h3>
+                <span className="text-[10px] text-slate-400 font-mono">Simulator · {testingAgent.modelId}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowTestDrawer(false)}
+              className="text-slate-400 hover:text-slate-600 font-bold text-lg p-1"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Test Messages */}
+          <div className="flex-1 p-4 bg-slate-50/50 overflow-y-auto space-y-3">
+            {testMessages.map((m) => (
+              <div
+                key={m.id}
+                className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`p-3 rounded-2xl max-w-[85%] text-xs shadow-2xs ${
+                    m.sender === 'user'
+                      ? 'bg-indigo-600 text-white rounded-br-none'
+                      : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'
+                  }`}
+                >
+                  <p className="leading-relaxed">{m.text}</p>
+                </div>
+              </div>
+            ))}
+            {isTestSending && (
+              <div className="flex justify-start">
+                <div className="p-3 bg-white border border-slate-200 rounded-2xl text-xs text-slate-400 flex items-center gap-1.5 animate-pulse">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>Thinking & querying Bedrock KB...</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Suggested Prompts Pills */}
+          <div className="p-2 border-t border-slate-100 bg-white flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {testingAgent.suggestedPrompts.map((prompt, i) => (
+              <button
+                key={i}
+                onClick={() => handleSendTestMessage(undefined, prompt)}
+                className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 text-[10px] font-bold whitespace-nowrap transition-colors"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          {/* Composer */}
+          <form onSubmit={handleSendTestMessage} className="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Ask a question or test tool invocation..."
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+            />
+            <button
+              type="submit"
+              disabled={isTestSending || !inputMessage.trim()}
+              className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition-colors"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

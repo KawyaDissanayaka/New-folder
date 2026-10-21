@@ -1,47 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Building2, Globe, User, Layers, Cpu, ArrowRight, Phone, Lock, MapPin, FileText, ChevronRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Mail, Building2, User, CheckCircle2, ArrowRight, ShieldCheck, Lock, RotateCcw, Sparkles } from 'lucide-react';
 import ToastContainer, { type ToastMessage } from '@/components/Toast';
-
-// ⭐ Defined OUTSIDE Register — prevents remounting on every keystroke
-// ⭐ inputClass does NOT take errors as param to avoid recreating on every render
-function inputClass(hasError: boolean) {
-  // font-size: 16px via text-base prevents iOS/Android zoom on focus
-  return `w-full pl-10 pr-4 py-2.5 rounded-xl border text-base font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 transition-all placeholder:text-slate-300 ${
-    hasError
-      ? 'border-red-400 focus:ring-red-500/20'
-      : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
-  }`;
-}
-
-function Field({
-  label, icon, required = false, error, children,
-}: {
-  label: string; icon: React.ReactNode; required?: boolean; error?: string; children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">{icon}</span>
-        {children}
-      </div>
-      {error && <p className="text-[10px] text-red-500 font-semibold mt-1">{error}</p>}
-    </div>
-  );
-}
 
 export default function Register() {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<1 | 2>(1);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Toasts state
+  // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now().toString();
@@ -51,512 +19,373 @@ export default function Register() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Form State
   const [formData, setFormData] = useState({
-    // Step 1 — Company Info
     companyName: '',
-    companyEmail: '',
-    phone: '',
-    website: '',
-    companyType: 'Technology',
-    country: 'Sri Lanka',
-    city: '',
-    address: '',
-    employeeCount: '',
-    about: '',
-    // Step 2 — Admin Account
     adminName: '',
     adminEmail: '',
-    adminPhone: '',
-    password: '',
-    confirmPassword: '',
+    liveAgentName: '',
+    liveAgentEmail: '',
+    acceptedTerms: false,
+    otpCode: '',
   });
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  // Generated Workspace result
+  const [workspaceResult, setWorkspaceResult] = useState({
+    tenantSlug: '',
+    tenantId: '',
+  });
 
-  const set = (key: string, val: string) =>
-    setFormData((prev) => ({ ...prev, [key]: val }));
-
-  const validateStep1 = () => {
-    const e: { [k: string]: string } = {};
-    if (!formData.companyName) e.companyName = 'Company name is required';
-    if (!formData.companyEmail) e.companyEmail = 'Company email is required';
-    if (!formData.phone) e.phone = 'Phone number is required';
-    if (!formData.country) e.country = 'Country is required';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const validateStep2 = () => {
-    const e: { [k: string]: string } = {};
-    if (!formData.adminName) e.adminName = 'Admin name is required';
-    if (!formData.adminEmail) e.adminEmail = 'Admin email is required';
-    if (!formData.password) e.password = 'Password is required';
-    else if (formData.password.length < 8) e.password = 'At least 8 characters';
-    if (!formData.confirmPassword) e.confirmPassword = 'Please confirm password';
-    else if (formData.password !== formData.confirmPassword) e.confirmPassword = 'Passwords do not match';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const handleNext = (e: React.FormEvent) => {
+  const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateStep1()) {
-      setErrors({});
-      setStep(2);
+    if (!formData.companyName || !formData.adminName || !formData.adminEmail || !formData.liveAgentName || !formData.liveAgentEmail) {
+      addToast('Please complete all required fields.', 'error');
+      return;
     }
-  };
+    if (!formData.acceptedTerms) {
+      addToast('Please agree to platform terms to proceed.', 'error');
+      return;
+    }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateStep2()) return;
     setIsLoading(true);
-    try {
-      const res = await fetch('http://localhost:3001/api/registrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          companyName: formData.companyName,
-          companyEmail: formData.companyEmail,
-          phone: formData.phone,
-          website: formData.website,
-          companyType: formData.companyType,
-          country: formData.country,
-          city: formData.city,
-          address: formData.address,
-          employeeCount: formData.employeeCount,
-          about: formData.about,
-          adminName: formData.adminName,
-          adminEmail: formData.adminEmail,
-          adminPhone: formData.adminPhone,
-          industry: formData.companyType,
-          // password intentionally excluded
-        }),
-      });
-      if (!res.ok) throw new Error('Server error');
-      navigate('/register-success');
-    } catch {
-      addToast('Could not connect to server. Please make sure the backend is running.', 'error');
-    } finally {
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      setStep(2);
+      addToast('Verification code sent to your work email.', 'success');
+    }, 700);
   };
 
+  const handleStep2Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.otpCode || formData.otpCode.length < 4) {
+      addToast('Please enter the verification code.', 'error');
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      const slug = formData.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 15);
+      const generatedTenantId = `ten_${slug}_${Math.floor(1000 + Math.random() * 9000)}`;
+
+      setWorkspaceResult({
+        tenantSlug: `${slug}-workspace`,
+        tenantId: generatedTenantId,
+      });
+
+      setStep(3);
+      addToast('Tenant boundary generated and accounts provisioned!', 'success');
+    }, 900);
+  };
+
+  const maskedEmail = formData.adminEmail
+    ? formData.adminEmail.replace(/^(.{2}).*(@.*)$/, '$1***$2')
+    : 'admin@company.com';
 
   return (
     <div className="min-h-screen bg-gradient-mesh flex flex-col justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {/* Main Card */}
       <div className="relative z-10 max-w-5xl w-full mx-auto bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12">
+        
+        {/* Left Intro Panel */}
+        <div className="md:col-span-5 bg-gradient-to-b from-[#081a34] via-[#0c2448] to-[#081a34] text-white p-8 flex flex-col justify-between relative">
+          <div className="space-y-6">
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center text-xs shadow-md">
+                SLT
+              </div>
+              <span className="font-black text-sm tracking-tight">SLT-MOBITEL</span>
+            </Link>
 
-        {/* Left Panel */}
-        <div className="md:col-span-4 bg-indigo-600 text-white p-8 flex flex-col justify-between relative">
-          <div className="flex flex-col items-center text-center space-y-4">
-            {/* Logos badge */}
-            <div className="flex items-center justify-center gap-2 p-2 bg-white rounded-2xl shadow-md">
-              <div className="w-10 h-7 overflow-hidden flex items-center justify-center rounded-md bg-white">
-                <img src="/slt-mobitel-logo.jpg" alt="SLT Mobitel" className="w-full h-full object-cover scale-[1.5]" />
-              </div>
-              <div className="w-px h-4 bg-slate-200" />
-              <div className="h-6 w-16 overflow-hidden flex items-center justify-center">
-                <img src="/the-embryo-logo.jpg" alt="The Embryo Innovation Centre" className="w-full h-full object-contain scale-[1.2]" />
-              </div>
+            <div className="space-y-3 pt-4">
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-cyan-300 border border-indigo-400/30 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Secure Company Onboarding</span>
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-black leading-tight">
+                Create your private AI operations workspace.
+              </h1>
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                Verify the company admin email once. We generate the tenant boundary and send secure Cognito invitations to both default users.
+              </p>
             </div>
 
-            <div>
-              <h2 className="text-lg font-black text-white tracking-tight">OmniAI Platform</h2>
-              <p className="text-[11px] text-indigo-100 font-medium mt-1">SLT Digital Lab &amp; Embryo Innovation</p>
-            </div>
-          </div>
-
-          <div className="space-y-3 mt-8">
-            {[
-              { icon: Building2, title: 'Own Workspace', desc: 'Your organization in one secure place.' },
-              { icon: Layers, title: 'Omni Channels', desc: 'WhatsApp, Messenger, Email & Web.' },
-              { icon: Cpu, title: 'AI Agents', desc: 'Deploy smart agents for your customers.' },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="bg-white/10 border border-white/20 p-3 rounded-2xl flex items-start gap-3 backdrop-blur-sm">
-                <Icon className="w-4 h-4 text-indigo-200 shrink-0 mt-0.5" />
+            {/* Starter Workspace Included Box */}
+            <div className="p-4 bg-slate-800/80 rounded-2xl border border-slate-700/80 space-y-3 text-xs">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400 block">
+                YOUR STARTER WORKSPACE INCLUDES
+              </span>
+              <div className="flex items-start gap-3">
+                <span className="px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-mono font-bold text-xs">01</span>
                 <div>
-                  <h4 className="text-[11px] font-black text-white">{title}</h4>
-                  <p className="text-[10px] text-indigo-100 leading-relaxed font-medium">{desc}</p>
+                  <strong className="text-white block">Company Admin Seat</strong>
+                  <span className="text-slate-400 text-[11px]">Build agents, manage knowledge, tools, and teams.</span>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Step Indicator */}
-          <div className="mt-8 space-y-3">
-            {[
-              { n: 1, label: 'Company Workspace Info' },
-              { n: 2, label: 'Super Admin Credentials' },
-            ].map(({ n, label }) => {
-              const active = step === n;
-              const done = step > n;
-              return (
-                <div key={n} className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${done ? 'bg-emerald-400 text-slate-900' : active ? 'bg-white text-indigo-700' : 'bg-white/20 text-indigo-100'}`}>
-                    {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : n}
-                  </div>
-                  <span className={`text-[11px] font-bold ${active ? 'text-white' : 'text-indigo-100'}`}>{label}</span>
+              <div className="flex items-start gap-3">
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-mono font-bold text-xs">01</span>
+                <div>
+                  <strong className="text-white block">Live Agent Seat</strong>
+                  <span className="text-slate-400 text-[11px]">Accept and resolve live customer handoffs.</span>
                 </div>
-              );
-            })}
+              </div>
+            </div>
           </div>
 
-          <p className="text-[10px] text-indigo-100 text-center mt-6 font-medium">&copy; 2026 OmniAI Platform</p>
+          <div className="pt-6 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-semibold">
+            <span>Encrypted at rest</span>
+            <span>Server tenant ID</span>
+            <span>Instant provisioning</span>
+          </div>
         </div>
 
-        {/* Right Panel */}
-        <div className="md:col-span-8 bg-white flex flex-col">
+        {/* Right Form Card */}
+        <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-between">
           
-          {/* Form Header */}
-          <div className="px-8 pt-8 pb-4 border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                  {step === 1 ? 'Register your company' : 'Create Admin Account'}
-                </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5 font-normal">
-                  {step === 1
-                    ? 'Fill out the form below to create your company workspace'
-                    : 'Set up the primary administrator account for your workspace'}
-                </p>
+          {/* Step Progress Dots */}
+          <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-4 text-xs font-bold">
+              <div className={`flex items-center gap-1.5 ${step === 1 ? 'text-indigo-600' : step > 1 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                  step === 1 ? 'bg-indigo-600 text-white' : step > 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {step > 1 ? '✓' : '1'}
+                </span>
+                <span>Company</span>
               </div>
-              <div className="text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl">
-                Step {step} / 2
+              <div className="w-6 h-px bg-slate-200" />
+              <div className={`flex items-center gap-1.5 ${step === 2 ? 'text-indigo-600' : step > 2 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                  step === 2 ? 'bg-indigo-600 text-white' : step > 2 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {step > 2 ? '✓' : '2'}
+                </span>
+                <span>Verify</span>
+              </div>
+              <div className="w-6 h-px bg-slate-200" />
+              <div className={`flex items-center gap-1.5 ${step === 3 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                  step === 3 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  3
+                </span>
+                <span>Ready</span>
               </div>
             </div>
+
+            <Link to="/login" className="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+              Sign in
+            </Link>
           </div>
 
-          {/* Step 1 — Company Info */}
+          {/* Step 1: Company & Default Users */}
           {step === 1 && (
-            <form onSubmit={handleNext} className="px-8 py-6 flex-1 overflow-y-auto space-y-4">
-              {/* Row 1 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Company Name" icon={<Building2 className="w-4 h-4 text-slate-400" />} required error={errors.companyName}>
-                  <input
-                    type="text"
-                    placeholder="Acme Tech Solutions"
-                    value={formData.companyName}
-                    onChange={(e) => set('companyName', e.target.value)}
-                    className={inputClass(!!errors.companyName)}
-                  />
-                </Field>
-                <Field label="Company Email" icon={<Mail className="w-4 h-4 text-slate-400" />} required error={errors.companyEmail}>
-                  <input
-                    type="email"
-                    placeholder="company@domain.com"
-                    value={formData.companyEmail}
-                    onChange={(e) => set('companyEmail', e.target.value)}
-                    className={inputClass(!!errors.companyEmail)}
-                  />
-                </Field>
+            <form onSubmit={handleStep1Submit} className="space-y-4">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 block">
+                  STEP 1 OF 2
+                </span>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">Company & Default Users</h2>
+                <p className="text-xs text-slate-500">Use work emails that can receive Cognito user invitations.</p>
               </div>
 
-              {/* Row 2 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Phone Number" icon={<Phone className="w-4 h-4 text-slate-400" />} required error={errors.phone}>
-                  <input
-                    type="tel"
-                    placeholder="+94 11 234 5678"
-                    value={formData.phone}
-                    onChange={(e) => set('phone', e.target.value)}
-                    className={inputClass(!!errors.phone)}
-                  />
-                </Field>
-                <Field label="Company Website" icon={<Globe className="w-4 h-4 text-slate-400" />}>
-                  <input
-                    type="url"
-                    placeholder="https://acme.com"
-                    value={formData.website}
-                    onChange={(e) => set('website', e.target.value)}
-                    className={inputClass(false)}
-                  />
-                </Field>
-              </div>
-
-              {/* Row 3 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-                    Type of Company <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.companyType}
-                    onChange={(e) => set('companyType', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  >
-                    <option value="Technology">Technology</option>
-                    <option value="Telecommunication">Telecommunication</option>
-                    <option value="Finance & Banking">Finance & Banking</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Education">Education</option>
-                    <option value="E-Commerce">E-Commerce</option>
-                    <option value="Manufacturing">Manufacturing</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Government">Government</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-                    No. of Employees
-                  </label>
-                  <select
-                    value={formData.employeeCount}
-                    onChange={(e) => set('employeeCount', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  >
-                    <option value="">Select range</option>
-                    <option value="1-10">1 – 10</option>
-                    <option value="11-50">11 – 50</option>
-                    <option value="51-200">51 – 200</option>
-                    <option value="201-500">201 – 500</option>
-                    <option value="501-1000">501 – 1,000</option>
-                    <option value="1000+">1,000+</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 4 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-                    Country <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.country}
-                    onChange={(e) => set('country', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  >
-                    <option>Sri Lanka</option>
-                    <option>India</option>
-                    <option>United States</option>
-                    <option>United Kingdom</option>
-                    <option>Australia</option>
-                    <option>Singapore</option>
-                    <option>Malaysia</option>
-                    <option>UAE</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <Field label="City / District" icon={<MapPin className="w-4 h-4 text-slate-400" />}>
-                  <input
-                    type="text"
-                    placeholder="Colombo"
-                    value={formData.city}
-                    onChange={(e) => set('city', e.target.value)}
-                    className={inputClass(false)}
-                  />
-                </Field>
-              </div>
-
-              {/* Row 5 */}
-              <Field label="Company Address" icon={<MapPin className="w-4 h-4 text-slate-400" />}>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Company Name *
+                </label>
                 <input
                   type="text"
-                  placeholder="No. 10, Main Street, Colombo 03"
-                  value={formData.address}
-                  onChange={(e) => set('address', e.target.value)}
-                  className={inputClass(false)}
+                  required
+                  placeholder="e.g. Acme Corporation"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                 />
-              </Field>
+              </div>
 
-              {/* Row 6 — About */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-                  About Your Company
-                </label>
-                <div className="relative">
-                  <FileText className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
-                  <textarea
-                    rows={3}
-                    placeholder="Brief description of your company and what you do..."
-                    value={formData.about}
-                    onChange={(e) => set('about', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-base font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all placeholder:text-slate-300 resize-none"
-                  />
+              {/* Company Admin block */}
+              <div className="p-3.5 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-md bg-indigo-600 text-white font-mono font-bold text-[10px] flex items-center justify-center">
+                    A
+                  </span>
+                  <span className="text-xs font-bold text-indigo-950">Default Company Admin</span>
                 </div>
-                <span className="text-[10px] text-slate-400 block text-right mt-1">{formData.about.length} / 300</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Admin Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Alex Morgan"
+                      value={formData.adminName}
+                      onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Admin Work Email</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="alex@acme.com"
+                      value={formData.adminEmail}
+                      onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all"
-                >
-                  Next — Admin Account
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+              {/* Live Agent block */}
+              <div className="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-md bg-emerald-600 text-white font-mono font-bold text-[10px] flex items-center justify-center">
+                    L
+                  </span>
+                  <span className="text-xs font-bold text-emerald-950">Default Live Agent</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Live Agent Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Sam Taylor"
+                      value={formData.liveAgentName}
+                      onChange={(e) => setFormData({ ...formData, liveAgentName: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Live Agent Email</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="support@acme.com"
+                      value={formData.liveAgentEmail}
+                      onChange={(e) => setFormData({ ...formData, liveAgentEmail: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <p className="text-center text-xs font-semibold text-slate-500">
-                Already have a company?{' '}
-                <Link to="/login" className="text-indigo-600 hover:underline font-bold">Sign in</Link>
-              </p>
+              <label className="flex items-start gap-2 text-xs text-slate-600 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  required
+                  checked={formData.acceptedTerms}
+                  onChange={(e) => setFormData({ ...formData, acceptedTerms: e.target.checked })}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 mt-0.5"
+                />
+                <span>I agree to the platform terms and acknowledge the tenant isolation notice.</span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <span>{isLoading ? 'Sending verification code...' : 'Send Verification Code'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </form>
           )}
 
-          {/* Step 2 — Admin Account */}
+          {/* Step 2: Email OTP Verification */}
           {step === 2 && (
-            <form onSubmit={handleSubmit} className="px-8 py-6 flex-1 overflow-y-auto space-y-4">
-              <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center gap-3">
-                <Building2 className="w-4 h-4 text-indigo-600 shrink-0" />
-                <div>
-                  <p className="text-[10px] font-bold text-indigo-700">{formData.companyName || 'Your Company'}</p>
-                  <p className="text-[10px] text-indigo-400">{formData.companyEmail}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="ml-auto text-[10px] font-bold text-indigo-600 hover:underline"
-                >
-                  Edit
-                </button>
+            <form onSubmit={handleStep2Submit} className="space-y-5">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 block">
+                  STEP 2 OF 2
+                </span>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">Verify your work email</h2>
+                <p className="text-xs text-slate-500">
+                  Enter the six-digit code sent to <strong className="text-slate-800 font-mono">{maskedEmail}</strong>.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Admin Full Name" icon={<User className="w-4 h-4 text-slate-400" />} required error={errors.adminName}>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={formData.adminName}
-                    onChange={(e) => set('adminName', e.target.value)}
-                    className={inputClass(!!errors.adminName)}
-                  />
-                </Field>
-                <Field label="Admin Email" icon={<Mail className="w-4 h-4 text-slate-400" />} required error={errors.adminEmail}>
-                  <input
-                    type="email"
-                    placeholder="admin@acme.com"
-                    value={formData.adminEmail}
-                    onChange={(e) => set('adminEmail', e.target.value)}
-                    className={inputClass(!!errors.adminEmail)}
-                  />
-                </Field>
-              </div>
-
-              <Field label="Admin Phone Number" icon={<Phone className="w-4 h-4 text-slate-400" />}>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Verification Code (OTP)
+                </label>
                 <input
-                  type="tel"
-                  placeholder="+94 77 123 4567"
-                  value={formData.adminPhone}
-                  onChange={(e) => set('adminPhone', e.target.value)}
-                  className={inputClass(false)}
+                  type="text"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={formData.otpCode}
+                  onChange={(e) => setFormData({ ...formData, otpCode: e.target.value })}
+                  className="w-full py-3.5 text-center font-mono text-2xl font-black tracking-widest bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-              </Field>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-                    Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Min. 8 characters"
-                      value={formData.password}
-                      onChange={(e) => set('password', e.target.value)}
-                      className={inputClass(!!errors.password) + ' pr-10'}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.password && <p className="text-[10px] text-red-500 font-semibold mt-1">{errors.password}</p>}
-                  {formData.password && (
-                    <div className="flex gap-1 mt-1.5">
-                      {[...Array(4)].map((_, i) => (
-                        <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${
-                          formData.password.length >= [4, 6, 8, 10][i]
-                            ? ['bg-red-400','bg-amber-400','bg-lime-400','bg-emerald-500'][i]
-                            : 'bg-slate-200'
-                        }`} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-                    Confirm Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type={showConfirm ? 'text' : 'password'}
-                      placeholder="Re-enter password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => set('confirmPassword', e.target.value)}
-                      className={inputClass(!!errors.confirmPassword) + ' pr-10'}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && <p className="text-[10px] text-red-500 font-semibold mt-1">{errors.confirmPassword}</p>}
-                  {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                    <p className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Passwords match
-                    </p>
-                  )}
-                </div>
               </div>
 
-              {/* Terms */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] text-slate-500 leading-relaxed">
-                By creating a workspace you agree to our{' '}
-                <Link to="/terms" className="text-indigo-600 font-bold hover:underline">Terms of Service</Link>
-                {' '}and{' '}
-                <Link to="/privacy" className="text-indigo-600 font-bold hover:underline">Privacy Policy</Link>.
-                Your workspace will be reviewed and activated by a Super Admin.
+              <div className="p-3.5 rounded-2xl bg-slate-100 text-slate-600 text-xs">
+                After verification, temporary-password invitations are sent to the company admin and live agent.
               </div>
 
-              <div className="flex items-center gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-all"
-                >
-                  Back
-                </button>
+              <div className="space-y-2">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Creating Workspace...
-                    </span>
-                  ) : (
-                    <>
-                      <ArrowRight className="w-4 h-4" />
-                      CREATE WORKSPACE
-                    </>
-                  )}
+                  <span>{isLoading ? 'Creating secure boundary...' : 'Create Secure Workspace'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Start over</span>
                 </button>
               </div>
             </form>
           )}
 
-          <div className="px-8 pb-5 text-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
-            Privacy Policy • Terms of Service • Support • © 2026 OmniAI Platform
-          </div>
+          {/* Step 3: Workspace Ready */}
+          {step === 3 && (
+            <div className="space-y-6 text-center py-4">
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-2xl shadow-md">
+                ✓
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 block">
+                  WORKSPACE READY
+                </span>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Your company boundary is active.</h2>
+                <p className="text-xs text-slate-500">Invitations were sent to both default users.</p>
+              </div>
+
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-left space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Company Workspace</span>
+                <strong className="text-sm font-black text-slate-900 block">{workspaceResult.tenantSlug}</strong>
+                <code className="text-xs font-mono text-indigo-600">{workspaceResult.tenantId}</code>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <span>Continue to Admin Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <Link to="/" className="text-xs font-bold text-slate-500 hover:text-slate-800 block">
+                  Return to Home
+                </Link>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
-
-      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }
